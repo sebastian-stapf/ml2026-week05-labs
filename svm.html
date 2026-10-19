@@ -1,0 +1,2114 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Support Vector Machines Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Interactive lab for Week 05: margins, the optimal margin classifier, Lagrange duality and KKT, soft margins, kernel SVMs and the SMO algorithm.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<style>
+/* Layout: sticky course header → hero with module sequence → tabbed lab modules (controls left, plots right) → worked questions.
+   Visual system follows the UniBE interactive-labs Tutorial 02 look: soft green glass panels, serif display, blue/orange classes. */
+:root {
+  --bg: #f3f6f1;
+  --bg-glow-a: rgba(180, 222, 197, .55);
+  --bg-glow-b: rgba(188, 217, 255, .55);
+  --fg: #17251f;
+  --muted: #5d6e66;
+  --faint: #8a9891;
+  --line: rgba(37, 71, 58, .14);
+  --panel: rgba(255, 255, 255, .58);
+  --panel-2: rgba(251, 253, 250, .74);
+  --panel-edge: rgba(255, 255, 255, .85);
+  --header: rgba(247, 250, 245, .78);
+  --primary: #176b58;
+  --primary-2: #1e8f75;
+  --primary-soft: rgba(225, 243, 235, .75);
+  --primary-ink: #ffffff;
+  --pos: #2563c9;
+  --neg: #df7616;
+  --pos-soft: rgba(37, 99, 201, .14);
+  --neg-soft: rgba(223, 118, 22, .14);
+  --bad: #c0392b;
+  --good: #1f8a5b;
+  --crest: #c8102e;
+  --plot-bg: #fbfdfa;
+  --plot-grid: rgba(30, 60, 50, .075);
+  --plot-axis: rgba(30, 60, 50, .38);
+  --plot-ink: #33463e;
+  --shadow: 0 26px 80px rgba(46, 84, 65, .12);
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-body: 'Geist', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --radius: 22px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1613;
+    --bg-glow-a: rgba(40, 110, 85, .28);
+    --bg-glow-b: rgba(50, 85, 140, .25);
+    --fg: #e2ebe6;
+    --muted: #9fb0a8;
+    --faint: #73847c;
+    --line: rgba(200, 230, 215, .12);
+    --panel: rgba(24, 36, 31, .66);
+    --panel-2: rgba(20, 30, 26, .8);
+    --panel-edge: rgba(200, 230, 215, .08);
+    --header: rgba(14, 22, 19, .82);
+    --primary: #4cc19e;
+    --primary-2: #2f9e7f;
+    --primary-soft: rgba(76, 193, 158, .12);
+    --primary-ink: #06130e;
+    --pos: #6ea4ff;
+    --neg: #f5a04e;
+    --pos-soft: rgba(110, 164, 255, .18);
+    --neg-soft: rgba(245, 160, 78, .18);
+    --bad: #ff7a6b;
+    --good: #5fd39c;
+    --crest: #e0344d;
+    --plot-bg: #111b17;
+    --plot-grid: rgba(210, 235, 225, .07);
+    --plot-axis: rgba(210, 235, 225, .35);
+    --plot-ink: #c3d2cb;
+    --shadow: 0 26px 80px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1613;
+  --bg-glow-a: rgba(40, 110, 85, .28);
+  --bg-glow-b: rgba(50, 85, 140, .25);
+  --fg: #e2ebe6;
+  --muted: #9fb0a8;
+  --faint: #73847c;
+  --line: rgba(200, 230, 215, .12);
+  --panel: rgba(24, 36, 31, .66);
+  --panel-2: rgba(20, 30, 26, .8);
+  --panel-edge: rgba(200, 230, 215, .08);
+  --header: rgba(14, 22, 19, .82);
+  --primary: #4cc19e;
+  --primary-2: #2f9e7f;
+  --primary-soft: rgba(76, 193, 158, .12);
+  --primary-ink: #06130e;
+  --pos: #6ea4ff;
+  --neg: #f5a04e;
+  --pos-soft: rgba(110, 164, 255, .18);
+  --neg-soft: rgba(245, 160, 78, .18);
+  --bad: #ff7a6b;
+  --good: #5fd39c;
+  --crest: #e0344d;
+  --plot-bg: #111b17;
+  --plot-grid: rgba(210, 235, 225, .07);
+  --plot-axis: rgba(210, 235, 225, .35);
+  --plot-ink: #c3d2cb;
+  --shadow: 0 26px 80px rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+body {
+  margin: 0;
+  color: var(--fg);
+  background:
+    radial-gradient(circle at 10% 2%, var(--bg-glow-a), transparent 32rem),
+    radial-gradient(circle at 90% 6%, var(--bg-glow-b), transparent 30rem),
+    var(--bg);
+  background-color: var(--bg);
+  font: 15px/1.55 var(--font-body);
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--primary); }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.wrap {
+  max-width: 1440px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Header */
+.site-header {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
+  border-bottom: 1px solid var(--line);
+  background: var(--header); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+}
+.site-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 10px; }
+.brand { display: flex; align-items: center; gap: 14px; min-width: 0; text-decoration: none; color: inherit; }
+.crest {
+  flex: 0 0 auto; display: grid; place-items: center; width: 32px; height: 38px; color: #fff; background: var(--crest);
+  clip-path: polygon(50% 0, 92% 13%, 88% 76%, 50% 100%, 12% 76%, 8% 13%);
+  font: 600 13px/1 var(--font-display); letter-spacing: .02em;
+}
+.brand-text { display: flex; flex-direction: column; min-width: 0; }
+.brand-text strong { font-size: 13.5px; letter-spacing: -.005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand-text span { font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+.site-nav { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.site-nav a {
+  padding: 7px 12px; border-radius: 999px; color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 600;
+  border: 1px solid transparent;
+}
+.site-nav a:hover { background: var(--panel); }
+.site-nav a[aria-current="page"] { color: var(--primary); border-color: var(--line); background: var(--panel); }
+
+/* Hero */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: clamp(24px, 6vw, 90px); align-items: end; padding-block: clamp(40px, 7vw, 90px) 40px; }
+.eyebrow, .kicker { margin: 0 0 12px; color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.hero h1 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(44px, 7vw, 92px); line-height: .95; letter-spacing: -.035em; text-wrap: balance; }
+.hero h1 em { font-style: italic; color: var(--primary); }
+.hero-copy { max-width: 64ch; margin: 22px 0 0; color: var(--muted); font-size: clamp(15px, 1.5vw, 19px); }
+.hero-card { padding: 20px 22px; border: 1px solid var(--panel-edge); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); backdrop-filter: blur(16px); }
+.hero-card > span { color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+.hero-card ol { display: grid; gap: 0; margin: 10px 0 0; padding: 0; list-style: none; }
+.hero-card li { display: flex; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.hero-card li:first-child { border-top: 0; }
+.hero-card b { color: var(--primary); font: 600 11px var(--font-mono); }
+.hero-card a { color: inherit; text-decoration: none; }
+.hero-card a:hover { color: var(--primary); }
+
+/* Module tabs */
+.module-nav {
+  display: grid; grid-template-columns: repeat(var(--tabs, 5), minmax(0, 1fr)); gap: 6px; margin-bottom: 16px; padding: 6px;
+  border: 1px solid var(--panel-edge); border-radius: 20px; background: var(--panel); backdrop-filter: blur(16px);
+}
+.module-nav button {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 58px; padding: 9px 14px;
+  border: 0; border-radius: 14px; color: var(--muted); background: transparent; text-align: left; transition: background .15s ease, transform .15s ease;
+}
+.module-nav button:hover { background: var(--panel-2); }
+.module-nav button[aria-selected="true"] { color: var(--primary-ink); background: linear-gradient(135deg, var(--primary), var(--primary-2)); box-shadow: 0 10px 24px rgba(23, 107, 88, .22); }
+.module-nav strong { font-size: 14px; }
+.module-nav small { font-size: 10px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; opacity: .8; }
+
+.lab-module { padding: clamp(18px, 3.4vw, 44px); border: 1px solid var(--panel-edge); border-radius: 30px; background: var(--panel); box-shadow: var(--shadow); backdrop-filter: blur(22px); }
+.module-heading { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; margin-bottom: 20px; }
+.module-heading > div { min-width: 0; }
+.module-heading h2 { margin: 0 0 8px; font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 3.6vw, 48px); letter-spacing: -.025em; line-height: 1.05; text-wrap: balance; }
+.module-heading p.lead { max-width: 70ch; margin: 0; color: var(--muted); }
+.callout { flex: 0 0 auto; max-width: 380px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--primary-soft); color: var(--fg); font-size: 13px; }
+.callout .src { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+
+.preset-row { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-bottom: 12px; }
+.preset-row > span { margin-right: 4px; color: var(--faint); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.chip {
+  padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); font-size: 13px; font-weight: 550;
+}
+.chip:hover { border-color: var(--primary); }
+.chip[aria-pressed="true"] { border-color: var(--primary); color: var(--primary-ink); background: var(--primary); }
+.explainer { margin: 0 0 16px; padding: 13px 18px; border: 1px solid var(--line); border-left: 4px solid var(--primary); border-radius: 14px; background: var(--primary-soft); }
+.explainer > span { display: block; margin-bottom: 4px; color: var(--primary); font-size: 10.5px; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+.explainer p { max-width: 110ch; margin: 0; font-size: 14px; }
+
+.lab-layout { display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 14px; }
+.glass { border: 1px solid var(--panel-edge); border-radius: var(--radius); background: var(--panel-2); }
+.controls { display: flex; flex-direction: column; gap: 16px; padding: 18px; min-width: 0; }
+.controls h3 { margin: 0; font-size: 11px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.ctl { display: grid; gap: 6px; }
+.ctl-label { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 12.5px; color: var(--muted); }
+.ctl-label i { color: var(--primary); font: italic 600 15px var(--font-display); margin-right: 4px; }
+.ctl-label output { color: var(--fg); font: 600 12px var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ctl.is-disabled { opacity: .45; }
+input[type="range"] { width: 100%; accent-color: var(--primary); margin: 0; height: 22px; }
+select { width: 100%; padding: 7px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; }
+.seg button { flex: 1 1 auto; padding: 6px 8px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.seg button[aria-pressed="true"] { background: var(--primary); color: var(--primary-ink); }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+.check input { accent-color: var(--primary); width: 16px; height: 16px; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn { padding: 8px 13px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel); font-size: 13px; font-weight: 600; }
+.btn:hover { border-color: var(--primary); }
+.btn.primary { border-color: var(--primary); background: var(--primary); color: var(--primary-ink); }
+.btn:disabled { opacity: .45; cursor: default; }
+.hint { margin: 0; color: var(--faint); font-size: 12px; }
+
+.visual { min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+.toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px; padding: 11px 16px; border-bottom: 1px solid var(--line); color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; text-transform: none; letter-spacing: 0; font-weight: 550; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { display: inline-block; width: 11px; height: 11px; border-radius: 50%; }
+.sw.pos { background: var(--pos); }
+.sw.neg { background: var(--neg); border-radius: 2px; }
+.sw.line { width: 18px; height: 0; border-radius: 0; border-top: 2px solid var(--fg); }
+.sw.dash { width: 18px; height: 0; border-radius: 0; border-top: 2px dashed var(--muted); }
+.sw.sv { background: transparent; border: 2px solid var(--fg); }
+.plots { display: grid; gap: 1px; background: var(--line); }
+.plots.two { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+.plots.two-even { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.plot-cell { position: relative; min-width: 0; background: var(--plot-bg); }
+.plot-cell .cap { position: absolute; left: 12px; top: 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--faint); pointer-events: none; }
+canvas.plot { display: block; width: 100%; aspect-ratio: 4 / 3; touch-action: none; }
+canvas.plot.wide { aspect-ratio: 16 / 9; }
+canvas.plot.short { aspect-ratio: 5 / 2; }
+canvas.plot.square { aspect-ratio: 1 / 1; }
+canvas.plot.static { touch-action: auto; }
+
+.readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border-top: 1px solid var(--line); }
+.readout div { padding: 10px 14px; background: var(--panel-2); min-width: 0; }
+.readout dt { margin: 0; color: var(--faint); font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.readout dd { margin: 2px 0 0; font: 600 14px var(--font-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.status { padding: 11px 16px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--fg); background: var(--panel-2); }
+.status b.ok { color: var(--good); }
+.status b.bad { color: var(--bad); }
+.tag { display: inline-block; padding: 1px 7px; border-radius: 6px; font: 600 11px var(--font-mono); }
+.tag.ok { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+.tag.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+
+.mat-wrap { overflow-x: auto; padding: 12px 16px; }
+table.mat { border-collapse: collapse; font: 12px var(--font-mono); font-variant-numeric: tabular-nums; }
+table.mat td, table.mat th { padding: 4px 8px; text-align: right; border: 1px solid var(--line); }
+table.mat th { color: var(--faint); font-weight: 600; }
+
+.math-block { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+mjx-container[display="true"] { margin: .5em 0 !important; }
+
+/* Questions */
+.questions { padding-block: 56px 80px; }
+.questions > header { max-width: 72ch; margin-bottom: 22px; }
+.questions h2 { margin: 0 0 8px; font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 3.6vw, 46px); letter-spacing: -.025em; }
+.questions > header p { margin: 0; color: var(--muted); }
+.q-list { display: grid; gap: 12px; }
+.q { border: 1px solid var(--panel-edge); border-radius: var(--radius); background: var(--panel); }
+.q > summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: baseline; padding: 18px 22px; cursor: pointer; list-style: none; }
+.q > summary::-webkit-details-marker { display: none; }
+.q-id { font: 600 12px var(--font-mono); color: var(--primary); }
+.q-title { font-size: 16px; font-weight: 600; }
+.q-title small { display: block; margin-top: 3px; color: var(--muted); font-size: 13.5px; font-weight: 400; }
+.q-toggle { color: var(--faint); font-size: 12px; font-weight: 650; white-space: nowrap; }
+.q[open] .q-toggle::after { content: ' ▴'; }
+.q:not([open]) .q-toggle::after { content: ' ▾'; }
+.q-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; padding: 0 22px 22px; }
+.q-body > * { min-width: 0; }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 10px; }
+.steps li { counter-increment: step; position: relative; padding-left: 34px; font-size: 14.5px; }
+.steps li::before { content: counter(step); position: absolute; left: 0; top: 1px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); font: 600 11px var(--font-mono); }
+.q-side { display: flex; flex-direction: column; gap: 12px; }
+.result { padding: 12px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2); font-size: 14px; }
+.result > span, .takeaway > span { display: block; margin-bottom: 4px; font-size: 10.5px; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); }
+.takeaway { padding: 12px 16px; border-left: 4px solid var(--neg); border-radius: 12px; background: var(--neg-soft); font-size: 14px; }
+.q-side canvas.plot { border-radius: 14px; border: 1px solid var(--line); background: var(--plot-bg); }
+
+footer.site-footer { padding-block: 26px 40px; border-top: 1px solid var(--line); color: var(--faint); font-size: 12.5px; }
+footer.site-footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+
+@media (max-width: 1080px) {
+  .hero { grid-template-columns: 1fr; }
+  .module-nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lab-layout { grid-template-columns: 1fr; }
+  .plots.two { grid-template-columns: 1fr; }
+  .q-body { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .module-heading { flex-direction: column; }
+  .callout { max-width: 100%; align-self: stretch; }
+  .module-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plots.two-even { grid-template-columns: 1fr; }
+  .site-nav a.opt { display: none; }
+  .brand-text span { display: none; }
+  .q > summary { grid-template-columns: auto minmax(0, 1fr); }
+  .q-toggle { grid-column: 2; }
+  .lab-module { border-radius: 22px; }
+}
+
+/* Keep wide equations inside their boxes on narrow screens */
+.callout { min-width: 0; overflow-x: auto; overflow-y: hidden; }
+mjx-container[display="true"] { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+.steps li, .q-title, .result, .takeaway, .lead, .explainer p, .hint, .status { min-width: 0; overflow-x: auto; overflow-y: hidden; }
+
+</style>
+<style>
+  .plots.three { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); }
+  @media (max-width: 1080px) { .plots.three { grid-template-columns: repeat(2, minmax(0, 1fr)); } .plots.three > :first-child { grid-column: 1 / -1; } }
+  @media (max-width: 640px) { .plots.three { grid-template-columns: 1fr; } }
+  .sub-lab { margin-top: 14px; display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 14px; }
+  @media (max-width: 1080px) { .sub-lab { grid-template-columns: 1fr; } }
+  .sub-lab h3.title { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 22px; letter-spacing: -.01em; color: var(--fg); text-transform: none; }
+  .margin-table td.bad { color: var(--bad); }
+  .margin-table tr.min td { font-weight: 700; }
+  .smo-log { padding: 10px 16px; border-top: 1px solid var(--line); font: 12.5px/1.6 var(--font-mono); color: var(--muted); background: var(--panel-2); overflow-x: auto; }
+</style>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' },
+    options: { enableMenu: false }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="./">
+      <span class="crest" aria-hidden="true">UB</span>
+      <span class="brand-text"><strong>Machine Learning 2026 · Week 05</strong><span>University of Bern · Interactive lab</span></span>
+    </a>
+    <nav class="site-nav" aria-label="Labs">
+      <a href="kernels.html">Kernels</a>
+      <a href="svm.html" aria-current="page">SVMs</a>
+      <a class="opt" href="#questions">Questions</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="wrap hero">
+    <div>
+      <p class="eyebrow">Chapter 6 · Supervised learning</p>
+      <h1>Support vector <em>machines</em></h1>
+      <p class="hero-copy">Among all lines that separate two classes, the SVM picks the one with the widest gap. Follow the chapter from margins to the quadratic program, through Lagrange duality to the dual in \(\alpha\), then soften the margin, swap in a kernel, and solve it all with SMO. Blue circles have \(y=+1\), orange squares \(y=-1\).</p>
+    </div>
+    <aside class="hero-card" aria-label="Experiments in this lab">
+      <span>Experiments</span>
+      <ol>
+        <li><b>6.3</b><a href="#m-margin" data-tab="m-margin">Functional and geometric margins</a></li>
+        <li><b>6.4</b><a href="#m-opt" data-tab="m-opt">The optimal margin classifier</a></li>
+        <li><b>6.5</b><a href="#m-dual" data-tab="m-dual">Lagrange duality and KKT</a></li>
+        <li><b>6.7</b><a href="#m-soft" data-tab="m-soft">Soft margin and the role of C</a></li>
+        <li><b>6.6</b><a href="#m-kernel" data-tab="m-kernel">Kernel SVMs</a></li>
+        <li><b>6.8</b><a href="#m-smo" data-tab="m-smo">The SMO algorithm</a></li>
+      </ol>
+    </aside>
+  </section>
+
+  <div class="wrap">
+    <div class="module-nav" id="nav" role="tablist" aria-label="Experiments" style="--tabs:6">
+      <button role="tab" id="t-margin" aria-controls="m-margin"><small>Experiment 1</small><strong>Margins</strong></button>
+      <button role="tab" id="t-opt" aria-controls="m-opt"><small>Experiment 2</small><strong>Max margin</strong></button>
+      <button role="tab" id="t-dual" aria-controls="m-dual"><small>Experiment 3</small><strong>Duality &amp; KKT</strong></button>
+      <button role="tab" id="t-soft" aria-controls="m-soft"><small>Experiment 4</small><strong>Soft margin</strong></button>
+      <button role="tab" id="t-kernel" aria-controls="m-kernel"><small>Experiment 5</small><strong>Kernel SVM</strong></button>
+      <button role="tab" id="t-smo" aria-controls="m-smo"><small>Experiment 6</small><strong>SMO</strong></button>
+    </div>
+
+    <!-- ============ 1. Margins ============ -->
+    <section class="lab-module" id="m-margin" role="tabpanel" aria-labelledby="t-margin">
+      <div class="module-heading">
+        <div>
+          <p class="kicker">6.1–6.3 · Functional and geometric margins</p>
+          <h2>Confidence is distance to the line</h2>
+          <p class="lead">Turn and shift the line \(w^\top x+b=0\). Each grey segment is a point's geometric margin \(\gamma^{(i)}\), its signed distance to the line. Then change the scale \(c\) of \((w,b)\): the line stays put, the functional margins \(\hat\gamma^{(i)}\) grow with \(c\), and the geometric margins do not change.</p>
+        </div>
+        <div class="callout">\[\hat\gamma^{(i)}=y^{(i)}(w^\top x^{(i)}+b),\qquad \gamma^{(i)}=\frac{\hat\gamma^{(i)}}{\|w\|}\]<span class="src">Section 6.3</span></div>
+      </div>
+      <div class="preset-row" id="g-presets">
+        <span>Presets</span>
+        <button class="chip" data-preset="abc">Points A, B, C</button>
+        <button class="chip" data-preset="scale">Same line, c = 3</button>
+        <button class="chip" data-preset="bad">A misclassifying line</button>
+      </div>
+      <div class="explainer" id="g-exp"><span>What to look for</span><p></p></div>
+      <div class="lab-layout">
+        <div class="glass controls">
+          <h3>Classifier \(h_{w,b}(x)=g(w^\top x+b)\)</h3>
+          <div class="ctl">
+            <label class="ctl-label" for="g-ang"><span><i>∠w</i>direction of w</span><output for="g-ang"></output></label>
+            <input type="range" id="g-ang" min="0" max="360" step="1" value="45">
+          </div>
+          <div class="ctl">
+            <label class="ctl-label" for="g-off"><span><i>−b/‖w‖</i>shift of the line</span><output for="g-off"></output></label>
+            <input type="range" id="g-off" min="-2" max="2" step="0.02" value="0.3">
+          </div>
+          <div class="ctl">
+            <label class="ctl-label" for="g-c"><span><i>c</i>scale: (w, b) → (c w, c b)</span><output for="g-c"></output></label>
+            <input type="range" id="g-c" min="0.2" max="4" step="0.05" value="1">
+          </div>
+          <p class="hint">Drag any point to move it. The training-set margins are the minima over all points, marked in bold in the table.</p>
+        </div>
+        <div class="glass visual">
+          <div class="toolbar"><span>Input space, equal axis scales</span>
+            <span class="legend"><span><i class="sw pos"></i>y = +1</span><span><i class="sw neg"></i>y = −1</span><span><i class="sw line"></i>w ᵀx + b = 0</span></span></div>
+          <div class="plots two">
+            <div class="plot-cell"><canvas class="plot square" id="g-plot" aria-label="Points, line and margins"></canvas></div>
+            <div class="plot-cell"><span class="cap">Margins per point</span><div class="mat-wrap" style="padding-top:34px"><table class="mat margin-table" id="g-table"></table></div></div>
+          </div>
+          <dl class="readout" id="g-read"></dl>
+          <div class="status" id="g-status"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. Optimal margin ============ -->
+    <section class="lab-module" id="m-opt" role="tabpanel" aria-labelledby="t-opt" hidden>
+      <div class="module-heading">
+        <div>
+          <p class="kicker">6.4 + 6.6 · The optimal margin classifier</p>
+          <h2>Only the support vectors matter</h2>
+          <p class="lead">This is the solution of the quadratic program on the right, computed live. Drag the points. The circled points lie on the dashed lines \(y^{(i)}(w^\top x^{(i)}+b)=1\) and are the only ones with \(\alpha_i>0\). Moving any other point leaves the classifier unchanged until it touches the margin.</p>
+        </div>
+        <div class="callout">\[\min_{w,b}\ \tfrac12\|w\|^2\ \ \text{s.t.}\ \ y^{(i)}(w^\top x^{(i)}+b)\ge1\]\[w=\textstyle\sum_i\alpha_iy^{(i)}x^{(i)}\]<span class="src">Eqs. (6.8), (6.10)</span></div>
+      </div>
+      <div class="preset-row" id="o-presets">
+        <span>Presets</span>
+        <button class="chip" data-preset="three">Three support vectors</button>
+        <button class="chip" data-preset="two">Two support vectors</button>
+        <button class="chip" data-preset="tight">Nearly touching classes</button>
+        <button class="chip" data-preset="overlap">Not separable</button>
+      </div>
+      <div class="explainer" id="o-exp"><span>What to look for</span><p></p></div>
+      <div class="lab-layout">
+        <div class="glass controls">
+          <h3>Display</h3>
+          <label class="check"><input type="checkbox" id="o-w" checked> Show \(w\) and the margin width \(2/\|w\|\)</label>
+          <label class="check"><input type="checkbox" id="o-alpha" checked> Label support vectors with \(\alpha_i\)</label>
+          <p class="hint">The dual (6.12) is solved with SMO (Experiment 6) and no upper bound on \(\alpha\). \(w\) comes from (6.10) and \(b^*\) from (6.13). If no separating line exists, the hard-margin problem has no solution, and nothing is drawn.</p>
+        </div>
+        <div class="glass visual">
+          <div class="toolbar"><span>Maximum-margin separating line</span>
+            <span class="legend"><span><i class="sw line"></i>decision boundary</span><span><i class="sw dash"></i>w ᵀx + b = ±1</span><span><i class="sw sv"></i>support vector</span></span></div>
+          <div class="plots two">
+            <div class="plot-cell"><canvas class="plot square" id="o-plot" aria-label="Optimal margin classifier"></canvas></div>
+            <div class="plot-cell"><span class="cap">Dual variables αᵢ (one bar per point)</span><canvas class="plot square static" id="o-bars" aria-label="Alpha values"></canvas></div>
+          </div>
+          <dl class="readout" id="o-read"></dl>
+          <div class="status" id="o-status"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. Duality ============ -->
+    <section class="lab-module" id="m-dual" role="tabpanel" aria-labelledby="t-dual" hidden>
+      <div class="module-heading">
+        <div>
+          <p class="kicker">6.5 · Lagrange duality</p>
+          <h2>The dual bound and complementary slackness</h2>
+          <p class="lead">A one-dimensional problem small enough to see whole: minimise \(f(w)=\tfrac12w^2\) subject to \(w\ge t\), i.e. \(g(w)=t-w\le0\). For each multiplier \(\alpha\ge0\), the dual function \(\theta_D(\alpha)=\min_w\mathcal L(w,\alpha)\) is a lower bound on \(p^*\). Find the \(\alpha\) that makes the bound tight, then move \(t\) to switch the constraint between active and inactive.</p>
+        </div>
+        <div class="callout">\[\mathcal L(w,\alpha)=\tfrac12w^2+\alpha(t-w)\]\[\theta_D(\alpha)=\alpha t-\tfrac12\alpha^2\le p^*\]<span class="src">Section 6.5, KKT (6.3)–(6.7)</span></div>
+      </div>
+      <div class="preset-row" id="d-presets">
+        <span>Presets</span>
+        <button class="chip" data-preset="active">Active constraint, t = 1</button>
+        <button class="chip" data-preset="inactive">Inactive constraint, t = −0.8</button>
+        <button class="chip" data-preset="loose">A loose bound</button>
+      </div>
+      <div class="explainer" id="d-exp"><span>What to look for</span><p></p></div>
+      <div class="lab-layout">
+        <div class="glass controls">
+          <h3>Problem</h3>
+          <div class="ctl">
+            <label class="ctl-label" for="d-t"><span><i>t</i>constraint w ≥ t</span><output for="d-t"></output></label>
+            <input type="range" id="d-t" min="-1.5" max="2" step="0.05" value="1">
+          </div>
+          <h3>Multiplier</h3>
+          <div class="ctl">
+            <label class="ctl-label" for="d-a"><span><i>α</i>Lagrange multiplier</span><output for="d-a"></output></label>
+            <input type="range" id="d-a" min="0" max="3.5" step="0.05" value="0.5">
+          </div>
+          <button class="btn primary" id="d-opt">Set α to the dual optimum α*</button>
+          <p class="hint">Left: the dashed parabola is \(\mathcal L(\cdot,\alpha)\); its lowest point is \(\theta_D(\alpha)\). Right: \(\theta_D\) as a function of \(\alpha\). The grey band marks infeasible \(w\), where \(\theta_P(w)=\infty\).</p>
+        </div>
+        <div class="glass visual">
+          <div class="toolbar"><span>Primal (left) and dual (right)</span>
+            <span class="legend"><span><i class="sw line"></i>f(w) = ½w²</span><span><i class="sw dash"></i>𝓛(w, α)</span></span></div>
+          <div class="plots two-even">
+            <div class="plot-cell"><canvas class="plot static" id="d-primal" aria-label="Primal objective and Lagrangian"></canvas></div>
+            <div class="plot-cell"><canvas class="plot static" id="d-dual" aria-label="Dual function"></canvas></div>
+          </div>
+          <dl class="readout" id="d-read"></dl>
+          <div class="status" id="d-status"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. Soft margin ============ -->
+    <section class="lab-module" id="m-soft" role="tabpanel" aria-labelledby="t-soft" hidden>
+      <div class="module-heading">
+        <div>
+          <p class="kicker">6.7 · Regularization and the non-separable case</p>
+          <h2>One outlier, two very different lines</h2>
+          <p class="lead">Add the outlier and the hard-margin line swings to squeeze past it. Slack variables \(\xi_i\) let points violate the margin at cost \(C\xi_i\). Lower \(C\) and the line returns to a wide, sensible margin. The right panel checks the KKT conditions (6.16)–(6.18) for every point.</p>
+        </div>
+        <div class="callout">\[\min_{w,b,\xi}\ \tfrac12\|w\|^2+C\sum_i\xi_i\]\[\text{s.t.}\ y^{(i)}(w^\top x^{(i)}+b)\ge1-\xi_i,\ \ \xi_i\ge0\]<span class="src">Section 6.7; dual box \(0\le\alpha_i\le C\)</span></div>
+      </div>
+      <div class="preset-row" id="c-presets">
+        <span>Presets</span>
+        <button class="chip" data-preset="clean">No outlier</button>
+        <button class="chip" data-preset="hard">Outlier, C = 1000</button>
+        <button class="chip" data-preset="soft">Outlier, C = 0.3</button>
+        <button class="chip" data-preset="tiny">C = 0.02</button>
+      </div>
+      <div class="explainer" id="c-exp"><span>What to look for</span><p></p></div>
+      <div class="lab-layout">
+        <div class="glass controls">
+          <h3>Data</h3>
+          <label class="check"><input type="checkbox" id="c-out" checked> Include the outlier (upper left, y = −1)</label>
+          <h3>Regularization</h3>
+          <div class="ctl">
+            <label class="ctl-label" for="c-C"><span><i>C</i>slack penalty</span><output for="c-C"></output></label>
+            <input type="range" id="c-C" min="-2" max="3" step="0.02" value="-0.5">
+          </div>
+          <label class="check"><input type="checkbox" id="c-hard" checked> Overlay the hard-margin line (C = ∞)</label>
+          <p class="hint">Red segments show slack: a point with \(\xi_i>0\) sits \(\xi_i/\|w\|\) inside its margin. Drag points to explore.</p>
+        </div>
+        <div class="glass visual">
+          <div class="toolbar"><span>Soft-margin linear SVM</span>
+            <span class="legend"><span><i class="sw line"></i>soft margin</span><span><i class="sw dash"></i>margins ±1</span><span><i class="sw" style="width:18px;height:0;border-radius:0;border-top:2px dotted var(--muted)"></i>hard margin</span><span><i class="sw sv"></i>α &gt; 0</span></span></div>
+          <div class="plots two">
+            <div class="plot-cell"><canvas class="plot square" id="c-plot" aria-label="Soft-margin SVM"></canvas></div>
+            <div class="plot-cell"><span class="cap">KKT check: αᵢ against yᵢ f(xᵢ)</span><canvas class="plot square static" id="c-kkt" aria-label="KKT conditions"></canvas></div>
+          </div>
+          <dl class="readout" id="c-read"></dl>
+          <div class="status" id="c-status"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. Kernel SVM ============ -->
+    <section class="lab-module" id="m-kernel" role="tabpanel" aria-labelledby="t-kernel" hidden>
+      <div class="module-heading">
+        <div>
+          <p class="kicker">6.6 · Kernels in the dual</p>
+          <h2>Curved boundaries from inner products</h2>
+          <p class="lead">The dual and the prediction only use \(\langle x^{(i)},x\rangle\). Replace it by \(K(x^{(i)},x)\) and the same algorithm draws curved boundaries. The background colour shows \(f(x)\): blue predicts \(+1\), orange \(-1\). Solid is \(f=0\), dashed \(f=\pm1\).</p>
+        </div>
+        <div class="callout">\[f(x)=\sum_{i}\alpha_iy^{(i)}K(x^{(i)},x)+b\]<span class="src">Eq. (6.15) with \(\langle\cdot,\cdot\rangle\to K\)</span></div>
+      </div>
+      <div class="preset-row" id="k-presets">
+        <span>Presets</span>
+        <button class="chip" data-preset="linring">Ring, linear kernel</button>
+        <button class="chip" data-preset="polyring">Ring, (xᵀz)²</button>
+        <button class="chip" data-preset="xor">XOR, Gaussian</button>
+        <button class="chip" data-preset="overfit">Moons, σ too small</button>
+      </div>
+      <div class="explainer" id="k-exp"><span>What to look for</span><p></p></div>
+      <div class="lab-layout">
+        <div class="glass controls">
+          <h3>Data</h3>
+          <div class="seg" id="k-data">
+            <button data-v="ring" aria-pressed="true">Ring</button>
+            <button data-v="xor">XOR</button>
+            <button data-v="moons">Moons</button>
+            <button data-v="blobs">Blobs</button>
+          </div>
+          <h3>Kernel</h3>
+          <div class="seg" id="k-type">
+            <button data-v="linear">Linear</button>
+            <button data-v="poly">(xᵀz+c)ᵏ</button>
+            <button data-v="rbf" aria-pressed="true">Gaussian</button>
+          </div>
+          <div class="ctl" data-for="poly">
+            <label class="ctl-label" for="k-k"><span><i>k</i>degree</span><output for="k-k"></output></label>
+            <input type="range" id="k-k" min="1" max="6" step="1" value="2">
+          </div>
+          <div class="ctl" data-for="poly">
+            <label class="ctl-label" for="k-c"><span><i>c</i>offset</span><output for="k-c"></output></label>
+            <input type="range" id="k-c" min="0" max="2" step="0.05" value="0">
+          </div>
+          <div class="ctl" data-for="rbf">
+            <label class="ctl-label" for="k-s"><span><i>σ</i>bandwidth</span><output for="k-s"></output></label>
+            <input type="range" id="k-s" min="-2.5" max="1" step="0.02" value="-0.4">
+          </div>
+          <div class="ctl">
+            <label class="ctl-label" for="k-C"><span><i>C</i>slack penalty</span><output for="k-C"></output></label>
+            <input type="range" id="k-C" min="-1" max="3" step="0.02" value="1">
+          </div>
+          <p class="hint">Drag points to see the boundary follow the support vectors.</p>
+        </div>
+        <div class="glass visual">
+          <div class="toolbar"><span>Decision function f(x)</span>
+            <span class="legend"><span><i class="sw pos"></i>y = +1</span><span><i class="sw neg"></i>y = −1</span><span><i class="sw sv"></i>support vector</span></span></div>
+          <div class="plots two">
+            <div class="plot-cell"><canvas class="plot square" id="k-plot" aria-label="Kernel SVM decision function"></canvas></div>
+            <div class="plot-cell"><span class="cap">KKT check: αᵢ against yᵢ f(xᵢ)</span><canvas class="plot square static" id="k-kkt" aria-label="KKT conditions"></canvas></div>
+          </div>
+          <dl class="readout" id="k-read"></dl>
+          <div class="status" id="k-status"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. SMO ============ -->
+    <section class="lab-module" id="m-smo" role="tabpanel" aria-labelledby="t-smo" hidden>
+      <div class="module-heading">
+        <div>
+          <p class="kicker">6.8 · Sequential minimal optimization</p>
+          <h2>Two multipliers at a time</h2>
+          <p class="lead">The constraint \(\sum_i\alpha_iy^{(i)}=0\) fixes any single \(\alpha_i\) once the others are fixed, so SMO moves a pair. Step through it. For each pair the middle panel shows the box \([0,C]^2\) and the line \(\alpha_iy^{(i)}+\alpha_jy^{(j)}=\zeta\). The right panel shows \(W\) along that line: a concave parabola whose maximiser is clipped to \([L,H]\).</p>
+        </div>
+        <div class="callout">\[\alpha_j^{\text{new}}=\operatorname{clip}_{[L,H]}\big(\alpha_j^{\text{new,unclipped}}\big)\]<span class="src">Section 6.8.2, eq. (6.22)</span></div>
+      </div>
+      <div class="preset-row" id="m-presets">
+        <span>Presets</span>
+        <button class="chip" data-preset="lin">Linear kernel, C = 1</button>
+        <button class="chip" data-preset="gauss">Gaussian kernel, C = 3</button>
+        <button class="chip" data-preset="smallC">Small C = 0.1, many clips</button>
+      </div>
+      <div class="explainer" id="m-exp"><span>What to look for</span><p></p></div>
+      <div class="lab-layout">
+        <div class="glass controls">
+          <h3>Problem</h3>
+          <div class="seg" id="m-type">
+            <button data-v="linear" aria-pressed="true">Linear</button>
+            <button data-v="rbf">Gaussian σ = 0.8</button>
+          </div>
+          <div class="ctl">
+            <label class="ctl-label" for="m-C"><span><i>C</i>box size</span><output for="m-C"></output></label>
+            <input type="range" id="m-C" min="-1" max="1.5" step="0.05" value="0">
+          </div>
+          <h3>Run SMO</h3>
+          <div class="btn-row">
+            <button class="btn primary" id="m-step">Next pair</button>
+            <button class="btn" id="m-run">Run to convergence</button>
+            <button class="btn" id="m-reset">Reset α = 0</button>
+          </div>
+          <p class="hint">Pairs are chosen by the maximal-violating-pair rule (one of the heuristics after Platt). SMO stops when the KKT conditions hold to within tol = 10⁻³.</p>
+        </div>
+        <div class="glass visual">
+          <div class="toolbar"><span>Current classifier · pair box · objective along the line</span>
+            <span class="legend"><span><i class="sw" style="background:transparent;border:2px solid var(--bad)"></i>pair (i, j)</span><span><i class="sw sv"></i>α &gt; 0</span></span></div>
+          <div class="plots three">
+            <div class="plot-cell"><canvas class="plot square" id="m-plot" aria-label="Current classifier"></canvas></div>
+            <div class="plot-cell"><span class="cap">(αᵢ, αⱼ) in the box [0, C]²</span><canvas class="plot square static" id="m-box" aria-label="Pair box constraint"></canvas></div>
+            <div class="plot-cell"><span class="cap">W along the line, as a function of αⱼ</span><canvas class="plot square static" id="m-par" aria-label="Objective along constraint line"></canvas></div>
+          </div>
+          <div class="smo-log" id="m-log"></div>
+          <dl class="readout" id="m-read"></dl>
+          <div class="status" id="m-status"></div>
+        </div>
+      </div>
+      <div class="sub-lab">
+        <div class="glass controls">
+          <h3 class="title">Coordinate ascent (6.8.1)</h3>
+          <p class="hint" style="color:var(--muted)">Without the equality constraint, one coordinate at a time works. Here \(W(\alpha)=-\tfrac12\alpha^\top A\alpha\) with \(A=\begin{bmatrix}1&\rho\\\rho&1\end{bmatrix}\), started at \((2,-2)\). Each step is parallel to an axis.</p>
+          <div class="ctl">
+            <label class="ctl-label" for="ca-r"><span><i>ρ</i>coupling of α₁ and α₂</span><output for="ca-r"></output></label>
+            <input type="range" id="ca-r" min="0" max="0.95" step="0.01" value="0.7">
+          </div>
+          <div class="result" id="ca-out"></div>
+        </div>
+        <div class="glass visual">
+          <div class="plot-cell"><canvas class="plot wide static" id="ca-plot" aria-label="Coordinate ascent path"></canvas></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ Questions ============ -->
+  <section class="wrap questions" id="questions">
+    <header>
+      <p class="kicker">Check yourself</p>
+      <h2>Discussion questions</h2>
+      <p>Try each question on paper first. Then open the worked answer: it has a derivation, a live calculation you can change, and a one-line takeaway.</p>
+    </header>
+    <div class="q-list">
+
+      <details class="q" id="q1">
+        <summary><span class="q-id">S1</span><span class="q-title">What happens to the margins when \((w,b)\) is replaced by \((cw,cb)\)?<small>Consider \(x=(2,1)\), \(y=1\), \(w=(1,1)\), \(b=-1\) and any \(c>0\).</small></span><span class="q-toggle">Worked answer</span></summary>
+        <div class="q-body">
+          <ol class="steps">
+            <li>The classifier is unchanged: \(g(cw^\top x+cb)=g(w^\top x+b)\) because \(c>0\) does not change the sign.</li>
+            <li>Functional margin: \(\hat\gamma=y(cw^\top x+cb)=c\,y(w^\top x+b)\). It scales linearly with \(c\).</li>
+            <li>Geometric margin: \(\gamma=\hat\gamma/\|cw\|=c\,y(w^\top x+b)/(c\|w\|)\). The factor \(c\) cancels.</li>
+            <li>Hence maximising \(\hat\gamma\) alone is meaningless, and the normalisation \(\hat\gamma=1\) in (6.8) is a free choice of scale.</li>
+          </ol>
+          <div class="q-side">
+            <div class="ctl">
+              <label class="ctl-label" for="q1-c"><span><i>c</i>scale</span><output for="q1-c"></output></label>
+              <input type="range" id="q1-c" min="0.1" max="5" step="0.1" value="1">
+            </div>
+            <div class="result"><span>Current result</span><div id="q1-out"></div></div>
+            <div class="takeaway"><span>Takeaway</span>The functional margin measures confidence only up to scale; the geometric margin is the scale-free distance.</div>
+          </div>
+        </div>
+      </details>
+
+      <details class="q" id="q2">
+        <summary><span class="q-id">S2</span><span class="q-title">Derive the geometric margin \(\gamma^{(i)}\) of a point.<small>Use that \(w\) is orthogonal to the decision boundary.</small></span><span class="q-toggle">Worked answer</span></summary>
+        <div class="q-body">
+          <ol class="steps">
+            <li>\(w/\|w\|\) is the unit normal of the line. Starting at \(A=x^{(i)}\) and walking a distance \(\gamma^{(i)}\) against it reaches \(B=x^{(i)}-\gamma^{(i)}w/\|w\|\).</li>
+            <li>\(B\) lies on the boundary: \(w^\top\big(x^{(i)}-\gamma^{(i)}\tfrac{w}{\|w\|}\big)+b=0\).</li>
+            <li>Using \(w^\top w=\|w\|^2\): \(w^\top x^{(i)}+b-\gamma^{(i)}\|w\|=0\), so \(\gamma^{(i)}=\dfrac{w^\top x^{(i)}+b}{\|w\|}\).</li>
+            <li>Multiplying by \(y^{(i)}\) makes it positive for correctly classified points of either class: \(\gamma^{(i)}=y^{(i)}\big((\tfrac{w}{\|w\|})^\top x^{(i)}+\tfrac{b}{\|w\|}\big)\).</li>
+          </ol>
+          <div class="q-side">
+            <div class="ctl">
+              <label class="ctl-label" for="q2-x"><span><i>A</i>position along the x₁-axis</span><output for="q2-x"></output></label>
+              <input type="range" id="q2-x" min="-1.5" max="3" step="0.05" value="2">
+            </div>
+            <canvas class="plot short" id="q2-plot" aria-label="Geometric margin construction"></canvas>
+            <div class="result"><span>Current result, w = (1, 2), b = −2, y = +1, A = (x₁, 1.5)</span><div id="q2-out"></div></div>
+            <div class="takeaway"><span>Takeaway</span>The geometric margin is the functional margin divided by \(\|w\|\): signed distance to the hyperplane.</div>
+          </div>
+        </div>
+      </details>
+
+      <details class="q" id="q3">
+        <summary><span class="q-id">S3</span><span class="q-title">Why does \(b^*=-\tfrac12\big(\max_{y^{(i)}=-1}w^{*\top}x^{(i)}+\min_{y^{(i)}=1}w^{*\top}x^{(i)}\big)\) hold?<small>Use the data of Experiment 2. The answer updates when you drag points there.</small></span><span class="q-toggle">Worked answer</span></summary>
+        <div class="q-body">
+          <ol class="steps">
+            <li>With \(w^*\) fixed, the constraints read \(w^{*\top}x^{(i)}+b\ge1\) for positives and \(w^{*\top}x^{(i)}+b\le-1\) for negatives.</li>
+            <li>The closest positive has projection \(m_+=\min_{y=1}w^{*\top}x\), the closest negative \(m_-=\max_{y=-1}w^{*\top}x\).</li>
+            <li>At the optimum both margins are tight: \(m_++b^*=1\) and \(m_-+b^*=-1\).</li>
+            <li>Adding the two equations gives \(m_++m_-+2b^*=0\), so \(b^*=-\tfrac12(m_-+m_+)\): the boundary lies halfway between the closest points of each class.</li>
+          </ol>
+          <div class="q-side">
+            <div class="result"><span>Current result from Experiment 2</span><div id="q3-out"></div></div>
+            <div class="takeaway"><span>Takeaway</span>Once \(w^*\) is known, \(b^*\) centres the boundary between the two classes' closest projections.</div>
+          </div>
+        </div>
+      </details>
+
+      <details class="q" id="q4">
+        <summary><span class="q-id">S4</span><span class="q-title">Derive the dual (6.12) and explain why most \(\alpha_i\) are zero.<small>Start from the Lagrangian (6.9).</small></span><span class="q-toggle">Worked answer</span></summary>
+        <div class="q-body">
+          <ol class="steps">
+            <li>\(\mathcal L(w,b,\alpha)=\tfrac12\|w\|^2-\sum_i\alpha_i[y^{(i)}(w^\top x^{(i)}+b)-1]\) with \(\alpha_i\ge0\).</li>
+            <li>\(\nabla_w\mathcal L=0\Rightarrow w=\sum_i\alpha_iy^{(i)}x^{(i)}\). \(\partial_b\mathcal L=0\Rightarrow\sum_i\alpha_iy^{(i)}=0\).</li>
+            <li>Substituting gives \(W(\alpha)=\sum_i\alpha_i-\tfrac12\sum_{i,j}y^{(i)}y^{(j)}\alpha_i\alpha_j\langle x^{(i)},x^{(j)}\rangle\), maximised over \(\alpha\ge0\), \(\sum_i\alpha_iy^{(i)}=0\).</li>
+            <li>Complementary slackness (6.5): \(\alpha_i\,[1-y^{(i)}(w^\top x^{(i)}+b)]=0\). Any point strictly outside the margin has a nonzero bracket, so \(\alpha_i=0\).</li>
+            <li>Strong duality holds (convex objective, affine constraints, Slater), so \(W(\alpha^*)=\tfrac12\|w^*\|^2\).</li>
+          </ol>
+          <div class="q-side">
+            <div class="result"><span>Current result from Experiment 2</span><div id="q4-out"></div></div>
+            <div class="takeaway"><span>Takeaway</span>The data enter the dual only through inner products, and only the support vectors carry weight. These two facts make kernels practical.</div>
+          </div>
+        </div>
+      </details>
+
+      <details class="q" id="q5">
+        <summary><span class="q-id">S5</span><span class="q-title">Where does the box constraint \(0\le\alpha_i\le C\) come from?<small>Form the soft-margin Lagrangian with multipliers \(\alpha_i\) and \(r_i\) for \(\xi_i\ge0\).</small></span><span class="q-toggle">Worked answer</span></summary>
+        <div class="q-body">
+          <ol class="steps">
+            <li>\(\mathcal L=\tfrac12w^\top w+C\sum_i\xi_i-\sum_i\alpha_i[y^{(i)}(x^{(i)\top}w+b)-1+\xi_i]-\sum_ir_i\xi_i\), with \(\alpha_i,r_i\ge0\).</li>
+            <li>\(\partial\mathcal L/\partial\xi_i=C-\alpha_i-r_i=0\Rightarrow\alpha_i=C-r_i\le C\).</li>
+            <li>The \(w\) and \(b\) conditions are unchanged, so the dual objective is the same \(W(\alpha)\). The \(\xi_i\) terms cancel, and only the bound \(\alpha_i\le C\) is new.</li>
+            <li>Complementarity gives (6.16)–(6.18): \(\alpha_i=0\Rightarrow y^{(i)}f(x^{(i)})\ge1\); \(0<\alpha_i<C\Rightarrow=1\); \(\alpha_i=C\Rightarrow\le1\) (since \(r_i=0\) allows \(\xi_i>0\)).</li>
+          </ol>
+          <div class="q-side">
+            <div class="result"><span>Current result from Experiment 4</span><div id="q5-out"></div></div>
+            <div class="takeaway"><span>Takeaway</span>\(C\) caps how much any single point can pull on \(w\). An outlier can contribute at most \(C\,y^{(i)}x^{(i)}\).</div>
+          </div>
+        </div>
+      </details>
+
+      <details class="q" id="q6">
+        <summary><span class="q-id">S6</span><span class="q-title">Why must SMO change two \(\alpha\)'s, and what are \(L\) and \(H\)?<small>Hold \(\alpha_3,\dots,\alpha_n\) fixed and look at the pair \((\alpha_1,\alpha_2)\).</small></span><span class="q-toggle">Worked answer</span></summary>
+        <div class="q-body">
+          <ol class="steps">
+            <li>From \(\sum_i\alpha_iy^{(i)}=0\): \(\alpha_1=-y^{(1)}\sum_{i\ge2}\alpha_iy^{(i)}\). With \(\alpha_2,\dots,\alpha_n\) fixed, \(\alpha_1\) cannot move.</li>
+            <li>For a pair, \(\alpha_1y^{(1)}+\alpha_2y^{(2)}=\zeta\): the feasible set is a line segment inside the box \([0,C]^2\).</li>
+            <li>If \(y^{(1)}\ne y^{(2)}\): \(\alpha_2-\alpha_1\) is fixed, so \(L=\max(0,\alpha_2-\alpha_1)\), \(H=\min(C,C+\alpha_2-\alpha_1)\).</li>
+            <li>If \(y^{(1)}=y^{(2)}\): \(\alpha_1+\alpha_2\) is fixed, so \(L=\max(0,\alpha_1+\alpha_2-C)\), \(H=\min(C,\alpha_1+\alpha_2)\).</li>
+          </ol>
+          <div class="q-side">
+            <div class="seg" id="q6-y"><button data-v="diff" aria-pressed="true">y⁽¹⁾ ≠ y⁽²⁾</button><button data-v="same">y⁽¹⁾ = y⁽²⁾</button></div>
+            <div class="ctl">
+              <label class="ctl-label" for="q6-a1"><span><i>α₁</i>current value</span><output for="q6-a1"></output></label>
+              <input type="range" id="q6-a1" min="0" max="1" step="0.01" value="0.3">
+            </div>
+            <div class="ctl">
+              <label class="ctl-label" for="q6-a2"><span><i>α₂</i>current value</span><output for="q6-a2"></output></label>
+              <input type="range" id="q6-a2" min="0" max="1" step="0.01" value="0.7">
+            </div>
+            <canvas class="plot short static" id="q6-plot" aria-label="Feasible segment in the box"></canvas>
+            <div class="result"><span>Current result, C = 1</span><div id="q6-out"></div></div>
+            <div class="takeaway"><span>Takeaway</span>Two variables are the smallest set that can move while keeping \(\sum_i\alpha_iy^{(i)}=0\), and the update along that line has a closed form.</div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Machine Learning 2026 · Week 05 · Based on the lecture notes, Chapter 6 (Support Vector Machines).</span>
+    <span>Start with the <a href="kernels.html">kernel methods lab</a>.</span>
+  </div>
+</footer>
+
+<script>
+/* Shared helpers for the Week 05 interactive labs: plotting on canvas, dragging,
+   tabs, small linear algebra, kernels and an SMO solver for the SVM dual. */
+(function () {
+  'use strict';
+  const L = {};
+  window.Lab = L;
+
+  L.$ = (s, r = document) => r.querySelector(s);
+  L.$$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  L.css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  L.clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  L.fmt = (v, d = 3) => {
+    if (!isFinite(v)) return v > 0 ? '∞' : v < 0 ? '−∞' : '—';
+    const s = Math.abs(v) >= 1e4 || (Math.abs(v) > 0 && Math.abs(v) < 1e-3) ? v.toExponential(2) : v.toFixed(d);
+    return s.replace('-', '−');
+  };
+  L.rgb = name => {
+    const s = L.css(name);
+    if (s.startsWith('#')) {
+      const h = s.length === 4 ? s.slice(1).split('').map(c => c + c).join('') : s.slice(1, 7);
+      return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+    }
+    const m = s.match(/[\d.]+/g) || [0, 0, 0];
+    return [+m[0], +m[1], +m[2]];
+  };
+  L.reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- theme change → redraw ---------- */
+  const themeListeners = new Set();
+  L.onTheme = fn => themeListeners.add(fn);
+  const fireTheme = () => themeListeners.forEach(f => f());
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fireTheme);
+  new MutationObserver(fireTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  /* ---------- MathJax re-typeset for dynamic content ---------- */
+  L.typeset = els => {
+    if (window.MathJax && MathJax.typesetPromise) {
+      (MathJax.startup && MathJax.startup.promise ? MathJax.startup.promise : Promise.resolve())
+        .then(() => MathJax.typesetPromise(els)).catch(() => {});
+    }
+  };
+
+  /* ---------- controls ---------- */
+  // Bind a range input to an <output>; returns a getter. map converts slider value to model value.
+  L.range = (id, { map = v => v, show = v => v, on } = {}) => {
+    const el = document.getElementById(id);
+    const out = document.querySelector(`output[for="${id}"]`);
+    const get = () => map(parseFloat(el.value));
+    const upd = () => { if (out) out.textContent = show(get()); };
+    el.addEventListener('input', () => { upd(); on && on(get()); });
+    upd();
+    get.el = el;
+    get.set = raw => { el.value = raw; upd(); };
+    get.refresh = upd;
+    return get;
+  };
+  // Segmented buttons: container with buttons[data-v]; returns getter
+  L.seg = (id, on) => {
+    const box = document.getElementById(id);
+    let val = (box.querySelector('[aria-pressed="true"]') || box.querySelector('button')).dataset.v;
+    const set = v => {
+      val = v;
+      box.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+    };
+    box.addEventListener('click', e => {
+      const b = e.target.closest('button[data-v]');
+      if (!b) return;
+      set(b.dataset.v); on && on(val);
+    });
+    set(val);
+    const get = () => val;
+    get.set = set;
+    return get;
+  };
+  // Preset chips: row with buttons[data-preset]
+  L.presets = (rowId, explainerId, table, apply) => {
+    const row = document.getElementById(rowId);
+    const exp = explainerId && document.getElementById(explainerId);
+    const select = key => {
+      row.querySelectorAll('button[data-preset]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.preset === key)));
+      if (exp && table[key]) { exp.querySelector('p').innerHTML = table[key].text; L.typeset([exp]); }
+      apply(key, table[key]);
+    };
+    row.addEventListener('click', e => {
+      const b = e.target.closest('button[data-preset]');
+      if (b) select(b.dataset.preset);
+    });
+    return {
+      select,
+      clear: () => row.querySelectorAll('button[data-preset]').forEach(b => b.setAttribute('aria-pressed', 'false'))
+    };
+  };
+
+  /* ---------- tabs ---------- */
+  L.tabs = (navId) => {
+    const nav = document.getElementById(navId);
+    const btns = L.$$('button[role="tab"]', nav);
+    const show = id => {
+      btns.forEach(b => {
+        const on = b.getAttribute('aria-controls') === id;
+        b.setAttribute('aria-selected', String(on));
+        b.tabIndex = on ? 0 : -1;
+        document.getElementById(b.getAttribute('aria-controls')).hidden = !on;
+      });
+      try { localStorage.setItem('tab:' + location.pathname + navId, id); } catch (e) { /* storage unavailable */ }
+    };
+    nav.addEventListener('click', e => {
+      const b = e.target.closest('button[role="tab"]');
+      if (b) show(b.getAttribute('aria-controls'));
+    });
+    nav.addEventListener('keydown', e => {
+      const i = btns.indexOf(document.activeElement);
+      if (i < 0) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        const j = (i + (e.key === 'ArrowRight' ? 1 : btns.length - 1)) % btns.length;
+        btns[j].focus(); show(btns[j].getAttribute('aria-controls'));
+        e.preventDefault();
+      }
+    });
+    const ids = btns.map(b => b.getAttribute('aria-controls'));
+    const fromHash = location.hash.slice(1);
+    let start = ids.includes(fromHash) ? fromHash : null;
+    if (!start) { try { const s = localStorage.getItem('tab:' + location.pathname + navId); if (ids.includes(s)) start = s; } catch (e) { /* ignore */ } }
+    show(start || ids[0]);
+    L.$$('a[data-tab]').forEach(a => a.addEventListener('click', ev => {
+      ev.preventDefault(); show(a.dataset.tab);
+      document.getElementById(navId).scrollIntoView({ behavior: L.reducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    }));
+    return { show };
+  };
+
+  /* ---------- Plot ---------- */
+  class Plot {
+    constructor(canvas, opts = {}) {
+      this.c = typeof canvas === 'string' ? document.getElementById(canvas) : canvas;
+      this.ctx = this.c.getContext('2d');
+      this.o = Object.assign({ xmin: -1, xmax: 1, ymin: -1, ymax: 1, equal: false, pad: { l: 44, r: 14, t: 28, b: 36 } }, opts);
+      this.o.pad = Object.assign({ l: 44, r: 14, t: 28, b: 36 }, opts.pad || {});
+      this.draw = () => {};
+      this._raf = 0;
+      new ResizeObserver(() => this.render()).observe(this.c);
+      L.onTheme(() => this.render());
+    }
+    range(xmin, xmax, ymin, ymax) { Object.assign(this.o, { xmin, xmax, ymin, ymax }); return this; }
+    layout() {
+      const dpr = window.devicePixelRatio || 1;
+      const w = this.c.clientWidth, h = this.c.clientHeight;
+      if (this.c.width !== Math.round(w * dpr) || this.c.height !== Math.round(h * dpr)) {
+        this.c.width = Math.round(w * dpr); this.c.height = Math.round(h * dpr);
+      }
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this.w = w; this.h = h;
+      const p = this.o.pad;
+      let { xmin, xmax, ymin, ymax } = this.o;
+      const pw = Math.max(10, w - p.l - p.r), ph = Math.max(10, h - p.t - p.b);
+      if (this.o.equal) {
+        const s = Math.min(pw / (xmax - xmin), ph / (ymax - ymin));
+        const cx = (xmin + xmax) / 2, cy = (ymin + ymax) / 2;
+        xmin = cx - pw / s / 2; xmax = cx + pw / s / 2; ymin = cy - ph / s / 2; ymax = cy + ph / s / 2;
+      }
+      this.v = { xmin, xmax, ymin, ymax };
+      this.pw = pw; this.ph = ph;
+      this.sx = pw / (xmax - xmin); this.sy = ph / (ymax - ymin);
+    }
+    X(x) { return this.o.pad.l + (x - this.v.xmin) * this.sx; }
+    Y(y) { return this.o.pad.t + (this.v.ymax - y) * this.sy; }
+    wx(px) { return this.v.xmin + (px - this.o.pad.l) / this.sx; }
+    wy(py) { return this.v.ymax - (py - this.o.pad.t) / this.sy; }
+    render() {
+      if (!this.c.clientWidth || !this.c.clientHeight) return;
+      this.layout();
+      const ctx = this.ctx;
+      ctx.clearRect(0, 0, this.w, this.h);
+      ctx.fillStyle = L.css('--plot-bg');
+      ctx.fillRect(0, 0, this.w, this.h);
+      ctx.save();
+      this.draw(this, ctx);
+      ctx.restore();
+    }
+    request() {
+      if (this._raf) return;
+      this._raf = requestAnimationFrame(() => { this._raf = 0; this.render(); });
+    }
+    clip(fn) {
+      const ctx = this.ctx, p = this.o.pad;
+      ctx.save(); ctx.beginPath(); ctx.rect(p.l, p.t, this.pw, this.ph); ctx.clip();
+      fn(ctx); ctx.restore();
+    }
+    static niceStep(span, target) {
+      const raw = span / target, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+      const r = raw / mag;
+      return (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * mag;
+    }
+    axes({ xlabel = '', ylabel = '', xticks = 6, yticks = 5, xfmt, yfmt, zero = true } = {}) {
+      const ctx = this.ctx, v = this.v, p = this.o.pad;
+      const grid = L.css('--plot-grid'), axis = L.css('--plot-axis'), ink = L.css('--plot-ink');
+      const sx = Plot.niceStep(v.xmax - v.xmin, Math.max(2, Math.min(xticks, this.pw / 60)));
+      const sy = Plot.niceStep(v.ymax - v.ymin, Math.max(2, Math.min(yticks, this.ph / 40)));
+      const dec = s => Math.max(0, -Math.floor(Math.log10(s) + 1e-9));
+      xfmt = xfmt || (t => t.toFixed(dec(sx)).replace('-', '−'));
+      yfmt = yfmt || (t => t.toFixed(dec(sy)).replace('-', '−'));
+      ctx.lineWidth = 1;
+      ctx.font = `11px ${L.css('--font-mono')}`;
+      ctx.fillStyle = ink;
+      ctx.strokeStyle = grid;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      for (let t = Math.ceil(v.xmin / sx) * sx; t <= v.xmax + 1e-9; t += sx) {
+        const x = Math.round(this.X(t)) + .5;
+        ctx.beginPath(); ctx.moveTo(x, p.t); ctx.lineTo(x, p.t + this.ph); ctx.stroke();
+        ctx.fillText(xfmt(Math.abs(t) < 1e-12 ? 0 : t), x, p.t + this.ph + 5);
+      }
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      for (let t = Math.ceil(v.ymin / sy) * sy; t <= v.ymax + 1e-9; t += sy) {
+        const y = Math.round(this.Y(t)) + .5;
+        ctx.beginPath(); ctx.moveTo(p.l, y); ctx.lineTo(p.l + this.pw, y); ctx.stroke();
+        ctx.fillText(yfmt(Math.abs(t) < 1e-12 ? 0 : t), p.l - 6, y);
+      }
+      ctx.strokeStyle = axis;
+      if (zero) {
+        if (v.ymin < 0 && v.ymax > 0) { const y = Math.round(this.Y(0)) + .5; ctx.beginPath(); ctx.moveTo(p.l, y); ctx.lineTo(p.l + this.pw, y); ctx.stroke(); }
+        if (v.xmin < 0 && v.xmax > 0) { const x = Math.round(this.X(0)) + .5; ctx.beginPath(); ctx.moveTo(x, p.t); ctx.lineTo(x, p.t + this.ph); ctx.stroke(); }
+      }
+      ctx.strokeRect(p.l + .5, p.t + .5, this.pw - 1, this.ph - 1);
+      ctx.font = `italic 13px ${L.css('--font-display')}`;
+      ctx.fillStyle = ink;
+      if (xlabel) { ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText(xlabel, p.l + this.pw - 6, p.t + this.ph - 4); }
+      if (ylabel) { ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(ylabel, p.l + 6, p.t + 5); }
+    }
+    // Heat map of f over the plot area; color(value) → [r,g,b,a(0..255)]
+    heat(f, color, res = 4) {
+      const cols = Math.ceil(this.pw / res), rows = Math.ceil(this.ph / res);
+      if (!this._off) this._off = document.createElement('canvas');
+      const off = this._off; off.width = cols; off.height = rows;
+      const octx = off.getContext('2d');
+      const img = octx.createImageData(cols, rows);
+      for (let j = 0; j < rows; j++) {
+        const y = this.wy(this.o.pad.t + (j + .5) * this.ph / rows);
+        for (let i = 0; i < cols; i++) {
+          const x = this.wx(this.o.pad.l + (i + .5) * this.pw / cols);
+          const c = color(f(x, y));
+          const k = 4 * (j * cols + i);
+          img.data[k] = c[0]; img.data[k + 1] = c[1]; img.data[k + 2] = c[2]; img.data[k + 3] = c[3];
+        }
+      }
+      octx.putImageData(img, 0, 0);
+      const ctx = this.ctx;
+      ctx.save(); ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(off, this.o.pad.l, this.o.pad.t, this.pw, this.ph);
+      ctx.restore();
+    }
+    // Marching-squares contour of f = level, drawn as line segments
+    contour(f, level, { res = 5, color, width = 2, dash = [] } = {}) {
+      const cols = Math.ceil(this.pw / res) + 1, rows = Math.ceil(this.ph / res) + 1;
+      const vals = new Float64Array(cols * rows);
+      const px = i => this.o.pad.l + i * this.pw / (cols - 1), py = j => this.o.pad.t + j * this.ph / (rows - 1);
+      for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) vals[j * cols + i] = f(this.wx(px(i)), this.wy(py(j))) - level;
+      const ctx = this.ctx;
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash); ctx.beginPath();
+      const lerp = (a, b) => a / (a - b);
+      for (let j = 0; j < rows - 1; j++) for (let i = 0; i < cols - 1; i++) {
+        const a = vals[j * cols + i], b = vals[j * cols + i + 1], c = vals[(j + 1) * cols + i + 1], d = vals[(j + 1) * cols + i];
+        const pts = [];
+        const x0 = px(i), x1 = px(i + 1), y0 = py(j), y1 = py(j + 1);
+        if ((a > 0) !== (b > 0)) pts.push([x0 + (x1 - x0) * lerp(a, b), y0]);
+        if ((b > 0) !== (c > 0)) pts.push([x1, y0 + (y1 - y0) * lerp(b, c)]);
+        if ((d > 0) !== (c > 0)) pts.push([x0 + (x1 - x0) * lerp(d, c), y1]);
+        if ((a > 0) !== (d > 0)) pts.push([x0, y0 + (y1 - y0) * lerp(a, d)]);
+        if (pts.length >= 2) { ctx.moveTo(pts[0][0], pts[0][1]); ctx.lineTo(pts[1][0], pts[1][1]); }
+        if (pts.length === 4) { ctx.moveTo(pts[2][0], pts[2][1]); ctx.lineTo(pts[3][0], pts[3][1]); }
+      }
+      ctx.stroke(); ctx.restore();
+    }
+    // Draw an infinite line a*x + b*y + c = 0 clipped to the view
+    line(a, b, c, style = {}) {
+      const v = this.v, ctx = this.ctx;
+      let p1, p2;
+      if (Math.abs(b) > Math.abs(a)) { p1 = [v.xmin, -(a * v.xmin + c) / b]; p2 = [v.xmax, -(a * v.xmax + c) / b]; }
+      else if (Math.abs(a) > 1e-12) { p1 = [-(b * v.ymin + c) / a, v.ymin]; p2 = [-(b * v.ymax + c) / a, v.ymax]; }
+      else return;
+      this.clip(() => {
+        ctx.strokeStyle = style.color || L.css('--fg'); ctx.lineWidth = style.width || 2; ctx.setLineDash(style.dash || []);
+        ctx.beginPath(); ctx.moveTo(this.X(p1[0]), this.Y(p1[1])); ctx.lineTo(this.X(p2[0]), this.Y(p2[1])); ctx.stroke();
+      });
+    }
+    curve(f, { color, width = 2.2, dash = [], x0, x1, n } = {}) {
+      const ctx = this.ctx;
+      x0 = x0 ?? this.v.xmin; x1 = x1 ?? this.v.xmax; n = n || Math.max(100, Math.round(this.pw / 2));
+      this.clip(() => {
+        ctx.strokeStyle = color || L.css('--fg'); ctx.lineWidth = width; ctx.setLineDash(dash);
+        ctx.beginPath();
+        let pen = false;
+        for (let i = 0; i <= n; i++) {
+          const x = x0 + (x1 - x0) * i / n, y = f(x);
+          if (!isFinite(y)) { pen = false; continue; }
+          const Y = L.clamp(this.Y(y), -1e4, 1e4);
+          if (!pen) { ctx.moveTo(this.X(x), Y); pen = true; } else ctx.lineTo(this.X(x), Y);
+        }
+        ctx.stroke();
+      });
+    }
+    // Class marker: +1 = filled circle (blue), −1 = filled square (orange)
+    marker(x, y, label, { r = 6, ring = false, faded = false, ringColor } = {}) {
+      const ctx = this.ctx, X = this.X(x), Y = this.Y(y);
+      ctx.save();
+      ctx.globalAlpha = faded ? .35 : 1;
+      ctx.fillStyle = label > 0 ? L.css('--pos') : L.css('--neg');
+      ctx.strokeStyle = L.css('--plot-bg'); ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      if (label > 0) ctx.arc(X, Y, r, 0, 2 * Math.PI); else ctx.rect(X - r * .9, Y - r * .9, r * 1.8, r * 1.8);
+      ctx.fill(); ctx.stroke();
+      if (ring) {
+        ctx.globalAlpha = 1; ctx.strokeStyle = ringColor || L.css('--fg'); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(X, Y, r + 5, 0, 2 * Math.PI); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    dot(x, y, { r = 4, color } = {}) {
+      const ctx = this.ctx;
+      ctx.fillStyle = color || L.css('--fg');
+      ctx.beginPath(); ctx.arc(this.X(x), this.Y(y), r, 0, 2 * Math.PI); ctx.fill();
+    }
+    arrow(x0, y0, x1, y1, { color, width = 2 } = {}) {
+      const ctx = this.ctx, X0 = this.X(x0), Y0 = this.Y(y0), X1 = this.X(x1), Y1 = this.Y(y1);
+      const a = Math.atan2(Y1 - Y0, X1 - X0), h = 9;
+      ctx.save(); ctx.strokeStyle = ctx.fillStyle = color || L.css('--fg'); ctx.lineWidth = width;
+      ctx.beginPath(); ctx.moveTo(X0, Y0); ctx.lineTo(X1, Y1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(X1, Y1);
+      ctx.lineTo(X1 - h * Math.cos(a - .4), Y1 - h * Math.sin(a - .4));
+      ctx.lineTo(X1 - h * Math.cos(a + .4), Y1 - h * Math.sin(a + .4)); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    label(text, x, y, { color, align = 'left', base = 'middle', font, dx = 0, dy = 0 } = {}) {
+      const ctx = this.ctx;
+      ctx.save(); ctx.fillStyle = color || L.css('--plot-ink');
+      ctx.font = font || `12px ${L.css('--font-body')}`;
+      ctx.textAlign = align; ctx.textBaseline = base;
+      ctx.fillText(text, this.X(x) + dx, this.Y(y) + dy); ctx.restore();
+    }
+  }
+  L.Plot = Plot;
+
+  // Diverging blue/orange fill for decision values. s = soft scale.
+  L.divergingColor = (scale = 1, maxAlpha = 0.42) => {
+    const pos = L.rgb('--pos'), neg = L.rgb('--neg');
+    return v => {
+      const t = Math.min(1, Math.abs(v) / scale);
+      const c = v >= 0 ? pos : neg;
+      return [c[0], c[1], c[2], Math.round(255 * maxAlpha * Math.sqrt(t))];
+    };
+  };
+  // Sequential single-hue fill (primary)
+  L.seqColor = (lo, hi, maxAlpha = 0.85, token = '--primary') => {
+    const c = L.rgb(token);
+    return v => {
+      const t = L.clamp((v - lo) / (hi - lo || 1), 0, 1);
+      return [c[0], c[1], c[2], Math.round(255 * maxAlpha * t)];
+    };
+  };
+
+  /* ---------- dragging points ---------- */
+  // pts: () => array of {x,y}; onMove(i, x, y); hitPx radius
+  L.drag = (plot, { pts, onMove, onEnd, onHover, hitPx = 16, bounds }) => {
+    const c = plot.c;
+    let active = -1;
+    const pos = e => {
+      const r = c.getBoundingClientRect();
+      return [plot.wx(e.clientX - r.left), plot.wy(e.clientY - r.top), e.clientX - r.left, e.clientY - r.top];
+    };
+    const hit = (px, py) => {
+      let best = -1, bd = hitPx * hitPx;
+      pts().forEach((p, i) => {
+        const dx = plot.X(p.x) - px, dy = plot.Y(p.y) - py, d = dx * dx + dy * dy;
+        if (d < bd) { bd = d; best = i; }
+      });
+      return best;
+    };
+    c.addEventListener('pointerdown', e => {
+      const [, , px, py] = pos(e);
+      active = hit(px, py);
+      if (active >= 0) { c.setPointerCapture(e.pointerId); e.preventDefault(); c.style.cursor = 'grabbing'; }
+    });
+    c.addEventListener('pointermove', e => {
+      const [x, y, px, py] = pos(e);
+      if (active >= 0) {
+        const v = plot.v, b = bounds || v;
+        onMove(active, L.clamp(x, b.xmin, b.xmax), L.clamp(y, b.ymin, b.ymax));
+      } else {
+        c.style.cursor = hit(px, py) >= 0 ? 'grab' : 'crosshair';
+        onHover && onHover(x, y);
+      }
+    });
+    const end = e => {
+      if (active >= 0) { active = -1; c.style.cursor = 'grab'; try { c.releasePointerCapture(e.pointerId); } catch (_) { /* already released */ } onEnd && onEnd(); }
+    };
+    c.addEventListener('pointerup', end);
+    c.addEventListener('pointercancel', end);
+    c.addEventListener('pointerleave', () => { if (active < 0 && onHover) onHover(null, null); });
+  };
+
+  /* ---------- linear algebra ---------- */
+  L.dot = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; };
+  L.dist2 = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) { const d = a[i] - b[i]; s += d * d; } return s; };
+  // Solve A x = b (Gaussian elimination with partial pivoting); returns null if singular
+  L.solve = (A, b) => {
+    const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+    for (let k = 0; k < n; k++) {
+      let p = k;
+      for (let i = k + 1; i < n; i++) if (Math.abs(M[i][k]) > Math.abs(M[p][k])) p = i;
+      if (Math.abs(M[p][k]) < 1e-14) return null;
+      [M[k], M[p]] = [M[p], M[k]];
+      for (let i = k + 1; i < n; i++) {
+        const f = M[i][k] / M[k][k];
+        for (let j = k; j <= n; j++) M[i][j] -= f * M[k][j];
+      }
+    }
+    const x = new Array(n).fill(0);
+    for (let i = n - 1; i >= 0; i--) {
+      let s = M[i][n];
+      for (let j = i + 1; j < n; j++) s -= M[i][j] * x[j];
+      x[i] = s / M[i][i];
+    }
+    return x;
+  };
+  // Symmetric eigen-decomposition (cyclic Jacobi). Returns {values, vectors} with vectors[k] the k-th eigenvector, sorted descending.
+  L.eigSym = A0 => {
+    const n = A0.length, A = A0.map(r => r.slice());
+    const V = A.map((r, i) => r.map((_, j) => (i === j ? 1 : 0)));
+    for (let sweep = 0; sweep < 60; sweep++) {
+      let off = 0;
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) off += A[i][j] * A[i][j];
+      if (off < 1e-22) break;
+      for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) {
+        if (Math.abs(A[p][q]) < 1e-300) continue;
+        const th = (A[q][q] - A[p][p]) / (2 * A[p][q]);
+        const t = Math.sign(th || 1) / (Math.abs(th) + Math.sqrt(th * th + 1));
+        const c = 1 / Math.sqrt(t * t + 1), s = t * c;
+        for (let k = 0; k < n; k++) {
+          const akp = A[k][p], akq = A[k][q];
+          A[k][p] = c * akp - s * akq; A[k][q] = s * akp + c * akq;
+        }
+        for (let k = 0; k < n; k++) {
+          const apk = A[p][k], aqk = A[q][k];
+          A[p][k] = c * apk - s * aqk; A[q][k] = s * apk + c * aqk;
+        }
+        for (let k = 0; k < n; k++) {
+          const vkp = V[k][p], vkq = V[k][q];
+          V[k][p] = c * vkp - s * vkq; V[k][q] = s * vkp + c * vkq;
+        }
+      }
+    }
+    const idx = [...Array(n).keys()].sort((a, b) => A[b][b] - A[a][a]);
+    return { values: idx.map(i => A[i][i]), vectors: idx.map(i => V.map(r => r[i])) };
+  };
+  // Largest eigenvalue of a symmetric PSD matrix via power iteration
+  L.lambdaMax = K => {
+    const n = K.length; let v = new Array(n).fill(1 / Math.sqrt(n)), lam = 0;
+    for (let it = 0; it < 200; it++) {
+      const w = K.map(r => L.dot(r, v));
+      const nrm = Math.sqrt(L.dot(w, w)) || 1;
+      const l2 = L.dot(v, w);
+      v = w.map(x => x / nrm);
+      if (Math.abs(l2 - lam) < 1e-10 * Math.abs(l2)) { lam = l2; break; }
+      lam = l2;
+    }
+    return lam;
+  };
+
+  /* ---------- kernels ---------- */
+  L.kernel = (type, p = {}) => {
+    switch (type) {
+      case 'linear': return (a, b) => L.dot(a, b);
+      case 'poly': return (a, b) => Math.pow(L.dot(a, b) + p.c, p.k);
+      case 'cubic': return (a, b) => { const t = L.dot(a, b); return 1 + t + t * t + t * t * t; };
+      case 'rbf': return (a, b) => Math.exp(-L.dist2(a, b) / (2 * p.sigma * p.sigma));
+      default: throw new Error('unknown kernel ' + type);
+    }
+  };
+
+  /* ---------- SMO for the SVM dual ----------
+     Lecture form: max W(α) = Σα − ½ΣΣ y_i y_j α_i α_j K_ij, 0 ≤ α ≤ C, Σ α_i y_i = 0.
+     Internally we minimise f(α) = −W(α) with gradient G = Qα − 1, Q_ij = y_i y_j K_ij,
+     choosing the maximal-violating pair each step (Keerthi et al.; LIBSVM's first-order rule). */
+  class SMO {
+    constructor(X, y, kfn, C, tol = 1e-3) {
+      this.X = X; this.y = y; this.k = kfn; this.C = C; this.tol = tol;
+      const n = this.n = X.length;
+      this.K = X.map(a => X.map(b => kfn(a, b)));
+      this.alpha = new Array(n).fill(0);
+      this.G = new Array(n).fill(-1);
+      this.iter = 0;
+    }
+    up(t) { const a = this.alpha[t]; return (this.y[t] > 0 && a < this.C - 1e-12) || (this.y[t] < 0 && a > 1e-12); }
+    low(t) { const a = this.alpha[t]; return (this.y[t] < 0 && a < this.C - 1e-12) || (this.y[t] > 0 && a > 1e-12); }
+    select() {
+      let m = -Infinity, M = Infinity, i = -1, j = -1;
+      for (let t = 0; t < this.n; t++) {
+        const v = -this.y[t] * this.G[t];
+        if (this.up(t) && v > m) { m = v; i = t; }
+        if (this.low(t) && v < M) { M = v; j = t; }
+      }
+      return { i, j, gap: m - M };
+    }
+    // One SMO step. Returns info about the pair or null when converged.
+    step() {
+      const { i, j, gap } = this.select();
+      if (i < 0 || j < 0 || gap < this.tol) return null;
+      const y = this.y, K = this.K, a = this.alpha, C = this.C, G = this.G;
+      const before = [a[i], a[j]];
+      const Qij = y[i] * y[j] * K[i][j];
+      if (y[i] !== y[j]) {
+        let quad = K[i][i] + K[j][j] + 2 * Qij; if (quad <= 0) quad = 1e-12;
+        const delta = (-G[i] - G[j]) / quad, diff = a[i] - a[j];
+        a[i] += delta; a[j] += delta;
+        if (diff > 0) { if (a[j] < 0) { a[j] = 0; a[i] = diff; } } else if (a[i] < 0) { a[i] = 0; a[j] = -diff; }
+        if (diff > 0) { if (a[i] > C) { a[i] = C; a[j] = C - diff; } } else if (a[j] > C) { a[j] = C; a[i] = C + diff; }
+      } else {
+        let quad = K[i][i] + K[j][j] - 2 * Qij; if (quad <= 0) quad = 1e-12;
+        const delta = (G[i] - G[j]) / quad, sum = a[i] + a[j];
+        a[i] -= delta; a[j] += delta;
+        if (sum > C) { if (a[i] > C) { a[i] = C; a[j] = sum - C; } } else if (a[j] < 0) { a[j] = 0; a[i] = sum; }
+        if (sum > C) { if (a[j] > C) { a[j] = C; a[i] = sum - C; } } else if (a[i] < 0) { a[i] = 0; a[j] = sum; }
+      }
+      const di = a[i] - before[0], dj = a[j] - before[1];
+      for (let t = 0; t < this.n; t++) G[t] += y[t] * (y[i] * K[i][t] * di + y[j] * K[j][t] * dj);
+      this.iter++;
+      return { i, j, gap, before, after: [a[i], a[j]] };
+    }
+    solve(maxIter = 50000) { while (this.iter < maxIter && this.step()); return this; }
+    converged() { return this.select().gap < this.tol; }
+    get b() {
+      let ub = Infinity, lb = -Infinity, sum = 0, nf = 0;
+      for (let t = 0; t < this.n; t++) {
+        const yG = this.y[t] * this.G[t], a = this.alpha[t];
+        if (a >= this.C - 1e-9) { if (this.y[t] < 0) ub = Math.min(ub, yG); else lb = Math.max(lb, yG); }
+        else if (a <= 1e-9) { if (this.y[t] > 0) ub = Math.min(ub, yG); else lb = Math.max(lb, yG); }
+        else { nf++; sum += yG; }
+      }
+      const rho = nf > 0 ? sum / nf : (isFinite(ub) && isFinite(lb) ? (ub + lb) / 2 : (isFinite(ub) ? ub : isFinite(lb) ? lb : 0));
+      return -rho;
+    }
+    // Decision value Σ α_i y_i K(x_i, x) + b
+    f(x, b = this.b) {
+      let s = b;
+      for (let t = 0; t < this.n; t++) if (this.alpha[t] > 1e-10) s += this.alpha[t] * this.y[t] * this.k(this.X[t], x);
+      return s;
+    }
+    fTrain(t, b = this.b) { let s = b; for (let u = 0; u < this.n; u++) s += this.alpha[u] * this.y[u] * this.K[u][t]; return s; }
+    W() {
+      let s = 0;
+      for (let i = 0; i < this.n; i++) {
+        s += this.alpha[i];
+        for (let j = 0; j < this.n; j++) s -= .5 * this.y[i] * this.y[j] * this.alpha[i] * this.alpha[j] * this.K[i][j];
+      }
+      return s;
+    }
+    w() { // linear kernel only: w = Σ α_i y_i x_i
+      const d = this.X[0].length, w = new Array(d).fill(0);
+      for (let t = 0; t < this.n; t++) for (let k = 0; k < d; k++) w[k] += this.alpha[t] * this.y[t] * this.X[t][k];
+      return w;
+    }
+  }
+  L.SMO = SMO;
+
+  /* ---------- seeded random ---------- */
+  L.rng = (seed = 1) => {
+    let s = seed >>> 0;
+    const r = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    r.normal = () => { let u = 0, v = 0; while (u === 0) u = r(); v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+    return r;
+  };
+})();
+
+</script>
+<script>
+(function () {
+  'use strict';
+  const { $, $$, fmt, Plot } = Lab;
+  const css = Lab.css;
+  Lab.tabs('nav');
+  const showFor = (root, type) => $$('[data-for]', root).forEach(el => { el.hidden = el.dataset.for !== type; });
+  const hooks = {};
+  const P = arr => arr.map(([x, y, l]) => ({ x, y, l }));
+
+  // decision-line helpers for linear w, b
+  function drawLinear(p, w, b, { color, margins = true, dash = [], width = 2.4 } = {}) {
+    p.line(w[0], w[1], b, { color: color || css('--fg'), width, dash });
+    if (margins) {
+      p.line(w[0], w[1], b - 1, { color: css('--muted'), width: 1.4, dash: [6, 5] });
+      p.line(w[0], w[1], b + 1, { color: css('--muted'), width: 1.4, dash: [6, 5] });
+    }
+  }
+  // α vs y f(x) KKT scatter
+  function drawKKT(p, ctx, s, C) {
+    const n = s.n, yf = s.y.map((y, t) => y * s.fTrain(t)), al = s.alpha;
+    const cTop = isFinite(C) ? C : Math.max(...al, 1e-3);
+    p.o.ymin = -0.08 * cTop; p.o.ymax = cTop * 1.15; p.o.xmin = -1.5; p.o.xmax = 3.5; p.layout();
+    p.axes({ xlabel: 'yᵢ f(xᵢ)', ylabel: 'αᵢ', yfmt: v => fmt(v, cTop < 0.1 ? 3 : 2) });
+    ctx.save();
+    ctx.fillStyle = css('--primary-soft');
+    // allowed regions: α=0 & yf ≥ 1 ; α=C & yf ≤ 1 ; free & yf = 1
+    ctx.strokeStyle = css('--good'); ctx.lineWidth = 6; ctx.globalAlpha = .35;
+    ctx.beginPath(); ctx.moveTo(p.X(1), p.Y(0)); ctx.lineTo(p.X(p.v.xmax), p.Y(0)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(p.X(1), p.Y(0)); ctx.lineTo(p.X(1), p.Y(cTop)); ctx.stroke();
+    if (isFinite(C)) { ctx.beginPath(); ctx.moveTo(p.X(p.v.xmin), p.Y(C)); ctx.lineTo(p.X(1), p.Y(C)); ctx.stroke(); }
+    ctx.restore();
+    if (isFinite(C)) p.label('α = C', p.v.xmax, C, { align: 'right', base: 'bottom', dx: -4, dy: -3, font: `11px ${css('--font-mono')}`, color: css('--muted') });
+    p.label('allowed by (6.16)–(6.18)', p.v.xmax, 0, { align: 'right', base: 'bottom', dx: -4, dy: -4, font: `11px ${css('--font-body')}`, color: css('--good') });
+    let clipped = 0, viol = 0;
+    for (let t = 0; t < n; t++) {
+      let x = yf[t];
+      const out = x < p.v.xmin || x > p.v.xmax;
+      if (out) { clipped++; x = Lab.clamp(x, p.v.xmin + .05, p.v.xmax - .05); }
+      if (kktViolated(al[t], yf[t], C)) viol++;
+      p.marker(x, al[t], s.y[t], { r: 5, faded: false, ring: out, ringColor: css('--muted') });
+    }
+    return { clipped, viol };
+  }
+  function kktViolated(a, yf, C, tol = 2e-3) {
+    const eps = 1e-6 * (isFinite(C) ? C : 1);
+    if (a <= eps) return yf < 1 - tol;
+    if (isFinite(C) && a >= C - eps) return yf > 1 + tol;
+    return Math.abs(yf - 1) > tol;
+  }
+
+  /* =====================================================================
+     1. Margins
+     ===================================================================== */
+  (function margins() {
+    const pts = P([[2.6, 2.4, 1], [1.5, 1.35, 1], [0.95, 0.75, 1], [2.2, 0.5, 1], [0.6, 2.3, 1],
+                   [-1.3, -0.9, -1], [-0.3, -1.7, -1], [-1.9, 0.7, -1], [0.3, -0.7, -1], [-0.8, 0.3, -1]]);
+    const names = ['A', 'B', 'C'];
+    const ang = Lab.range('g-ang', { show: v => v + '°', on: () => { pre.clear(); draw(); } });
+    const off = Lab.range('g-off', { show: v => fmt(v, 2), on: () => { pre.clear(); draw(); } });
+    const cs = Lab.range('g-c', { show: v => v.toFixed(2), on: () => { pre.clear(); draw(); } });
+    const wb = () => {
+      const a = ang() * Math.PI / 180, c = cs();
+      const w = [c * Math.cos(a), c * Math.sin(a)];
+      return { w, b: -off() * c, nw: c };
+    };
+    const plot = new Plot('g-plot', { xmin: -3, xmax: 3.2, ymin: -2.6, ymax: 3.2, equal: true, pad: { l: 36, b: 30, t: 14, r: 12 } });
+    plot.draw = (p, ctx) => {
+      const { w, b, nw } = wb();
+      p.heat((x, y) => w[0] * x + w[1] * y + b, Lab.divergingColor(3, 0.16), 6);
+      p.axes({ xlabel: 'x₁', ylabel: 'x₂' });
+      const gs = pts.map(q => q.l * (w[0] * q.x + w[1] * q.y + b) / nw);
+      const gmin = Math.min(...gs);
+      pts.forEach((q, i) => {
+        const s = (w[0] * q.x + w[1] * q.y + b) / (nw * nw);
+        const fx = q.x - s * w[0], fy = q.y - s * w[1];
+        ctx.strokeStyle = gs[i] < 0 ? css('--bad') : css('--muted');
+        ctx.lineWidth = Math.abs(gs[i] - gmin) < 1e-9 ? 2.6 : 1.3;
+        ctx.setLineDash(gs[i] < 0 ? [4, 3] : []);
+        ctx.beginPath(); ctx.moveTo(p.X(q.x), p.Y(q.y)); ctx.lineTo(p.X(fx), p.Y(fy)); ctx.stroke();
+        ctx.setLineDash([]);
+      });
+      p.line(w[0], w[1], b, { color: css('--fg'), width: 2.4 });
+      // w arrow from the point on the line closest to the origin
+      const s0 = -b / (nw * nw), ox = s0 * w[0], oy = s0 * w[1];
+      p.arrow(ox, oy, ox + w[0] * 0.8, oy + w[1] * 0.8, { color: css('--primary'), width: 2.2 });
+      p.label('w', ox + w[0] * 0.8, oy + w[1] * 0.8, { dx: 8, dy: -6, font: `italic 600 15px ${css('--font-display')}`, color: css('--primary') });
+      pts.forEach((q, i) => {
+        p.marker(q.x, q.y, q.l, { r: 6 });
+        if (q.l > 0 && i < 3) p.label(names[i], q.x, q.y, { dx: 9, dy: -10, font: `600 13px ${css('--font-body')}`, color: css('--fg') });
+      });
+    };
+    Lab.drag(plot, { pts: () => pts, onMove: (i, x, y) => { pts[i].x = x; pts[i].y = y; draw(); } });
+    function draw() {
+      plot.render();
+      const { w, b, nw } = wb();
+      const fm = pts.map(q => q.l * (w[0] * q.x + w[1] * q.y + b));
+      const gm = fm.map(v => v / nw);
+      const fmin = Math.min(...fm), gmin = Math.min(...gm);
+      $('#g-table').innerHTML = '<tr><th>pt</th><th>y</th><th>γ̂⁽ⁱ⁾</th><th>γ⁽ⁱ⁾</th></tr>' + pts.map((q, i) => {
+        const nm = q.l > 0 && i < 3 ? names[i] : String(i + 1);
+        return `<tr class="${Math.abs(gm[i] - gmin) < 1e-9 ? 'min' : ''}"><td>${nm}</td><td>${q.l > 0 ? '+1' : '−1'}</td><td class="${fm[i] < 0 ? 'bad' : ''}">${fmt(fm[i], 2)}</td><td class="${gm[i] < 0 ? 'bad' : ''}">${fmt(gm[i], 2)}</td></tr>`;
+      }).join('');
+      $('#g-read').innerHTML = `
+        <div><dt>w</dt><dd>(${fmt(w[0], 2)}, ${fmt(w[1], 2)})</dd></div>
+        <div><dt>b</dt><dd>${fmt(b, 2)}</dd></div>
+        <div><dt>‖w‖</dt><dd>${fmt(nw, 2)}</dd></div>
+        <div><dt>γ̂ = minᵢ γ̂⁽ⁱ⁾</dt><dd>${fmt(fmin, 3)}</dd></div>
+        <div><dt>γ = minᵢ γ⁽ⁱ⁾</dt><dd>${fmt(gmin, 3)}</dd></div>`;
+      const wrong = fm.filter(v => v < 0).length, st = $('#g-status');
+      st.innerHTML = wrong
+        ? `<b class="bad">${wrong} point${wrong > 1 ? 's are' : ' is'} misclassified</b> (negative margin, dashed red). The training-set margin γ = ${fmt(gmin, 2)} is negative, so this line does not separate the data.`
+        : `<b class="ok">All points correctly classified.</b> The smallest geometric margin is γ = ${fmt(gmin, 3)}. The optimal margin classifier (Experiment 2) chooses the line that makes this number as large as possible.`;
+    }
+    const pre = Lab.presets('g-presets', 'g-exp', {
+      abc: { text: 'As in the lecture figure: A is far from the boundary, so we are confident it is positive. C is close, and a small change of the line would flip its prediction. B lies in between. Compare their geometric margins in the table.' },
+      scale: { text: 'Same direction and shift as before, but \\((w,b)\\) multiplied by \\(c=3\\). The line and every distance in the plot are unchanged. The \\(\\hat\\gamma^{(i)}\\) column triples, the \\(\\gamma^{(i)}\\) column does not.' },
+      bad: { text: 'A line in the wrong place. Points on the wrong side have negative functional and geometric margins (red). A positive margin means a correct prediction.' }
+    }, key => {
+      const cfg = { abc: [45, 0.3, 1], scale: [45, 0.3, 3], bad: [110, 0.6, 1] }[key];
+      ang.set(cfg[0]); off.set(cfg[1]); cs.set(cfg[2]); draw();
+    });
+    pre.select('abc');
+  })();
+
+  /* =====================================================================
+     2. Optimal margin
+     ===================================================================== */
+  (function optimal() {
+    const layouts = {
+      three: [[1.0, 1.8, 1], [2.0, 1.1, 1], [1.6, 2.6, 1], [2.7, 2.2, 1], [0.3, 2.7, 1], [2.9, 0.4, 1],
+              [-1.0, -0.6, -1], [0.0, -1.3, -1], [-1.8, 0.4, -1], [-0.7, 0.9, -1], [-1.4, -1.8, -1], [1.1, -0.6, -1]],
+      two: [[1.2, 1.2, 1], [2.3, 1.9, 1], [1.8, 2.8, 1], [2.8, 1.0, 1], [1.2, 2.6, 1], [2.8, 2.8, 1],
+            [-0.2, -0.2, -1], [0.4, -1.6, -1], [-1.8, 0.3, -1], [-1.4, 0.8, -1], [-1.4, -1.8, -1], [0.9, -1.4, -1]],
+      tight: [[0.55, 0.65, 1], [2.0, 1.1, 1], [1.6, 2.6, 1], [2.7, 2.2, 1], [0.3, 2.7, 1], [2.9, 0.4, 1],
+              [-1.0, -0.6, -1], [0.0, -1.3, -1], [-1.8, 0.4, -1], [-0.7, 0.9, -1], [-1.4, -1.8, -1], [0.35, 0.3, -1]],
+      overlap: [[1.0, 1.8, 1], [2.0, 1.1, 1], [1.6, 2.6, 1], [2.7, 2.2, 1], [0.3, 2.7, 1], [-1.2, -1.0, 1],
+                [-1.0, -0.6, -1], [0.0, -1.3, -1], [-1.8, 0.4, -1], [-0.7, 0.9, -1], [-1.4, -1.8, -1], [1.1, -0.6, -1]]
+    };
+    let pts = P(layouts.three), s = null, feasible = true, w = [0, 0], b = 0, b613 = 0;
+    const showW = $('#o-w'), showA = $('#o-alpha');
+    showW.addEventListener('change', () => plot.render());
+    showA.addEventListener('change', () => plot.render());
+    function solve() {
+      const X = pts.map(q => [q.x, q.y]), y = pts.map(q => q.l);
+      s = new Lab.SMO(X, y, Lab.kernel('linear'), Infinity, 1e-6).solve(20000);
+      w = s.w(); b = s.b;
+      const proj = X.map(x => Lab.dot(w, x));
+      const mPlus = Math.min(...proj.filter((_, i) => y[i] > 0)), mMinus = Math.max(...proj.filter((_, i) => y[i] < 0));
+      b613 = -(mMinus + mPlus) / 2;
+      feasible = s.converged() && y.every((yy, i) => yy * (proj[i] + b) >= 1 - 1e-3);
+    }
+    const plot = new Plot('o-plot', { xmin: -2.6, xmax: 3.4, ymin: -2.4, ymax: 3.4, equal: true, pad: { l: 36, b: 30, t: 14, r: 12 } });
+    plot.draw = (p, ctx) => {
+      p.axes({ xlabel: 'x₁', ylabel: 'x₂' });
+      if (feasible) {
+        drawLinear(p, w, b);
+        if (showW.checked) {
+          const nw = Math.hypot(w[0], w[1]), s0 = -b / (nw * nw), ox = s0 * w[0], oy = s0 * w[1];
+          const u = [w[0] / nw, w[1] / nw], half = 1 / nw;
+          ctx.save(); ctx.strokeStyle = css('--primary'); ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.moveTo(p.X(ox - u[0] * half), p.Y(oy - u[1] * half)); ctx.lineTo(p.X(ox + u[0] * half), p.Y(oy + u[1] * half)); ctx.stroke(); ctx.restore();
+          p.arrow(ox, oy, ox + u[0] * 0.9, oy + u[1] * 0.9, { color: css('--primary'), width: 2.2 });
+          p.label('w', ox + u[0] * 0.9, oy + u[1] * 0.9, { dx: 6, dy: -8, font: `italic 600 15px ${css('--font-display')}`, color: css('--primary') });
+          p.label(`2/‖w‖ = ${fmt(2 / nw, 2)}`, ox - u[0] * half, oy - u[1] * half, { dx: 8, dy: 10, font: `11px ${css('--font-mono')}`, color: css('--primary') });
+        }
+      }
+      pts.forEach((q, i) => {
+        const sv = feasible && s.alpha[i] > 1e-6;
+        p.marker(q.x, q.y, q.l, { r: 6, ring: sv });
+        if (sv && showA.checked) p.label(`α=${fmt(s.alpha[i], 2)}`, q.x, q.y, { dx: 12, dy: 12, font: `11px ${css('--font-mono')}`, color: css('--fg') });
+      });
+    };
+    Lab.drag(plot, { pts: () => pts, onMove: (i, x, y) => { pts[i].x = x; pts[i].y = y; pre.clear(); update(); } });
+    const bars = new Plot('o-bars', { xmin: 0, xmax: 12, ymin: 0, ymax: 1, pad: { l: 46, b: 30, t: 30, r: 12 } });
+    bars.draw = (p, ctx) => {
+      const n = pts.length;
+      const m = feasible ? Math.max(...s.alpha, 0.05) * 1.18 : 1;
+      p.o.xmax = n; p.o.ymax = m; p.layout();
+      p.axes({ xfmt: () => '', ylabel: 'αᵢ' });
+      if (!feasible) { p.label('no solution: data not separable', n / 2, m / 2, { align: 'center', color: css('--bad'), font: `600 13px ${css('--font-body')}` }); return; }
+      pts.forEach((q, i) => {
+        const a = s.alpha[i];
+        ctx.fillStyle = q.l > 0 ? css('--pos') : css('--neg');
+        const x0 = p.X(i + .18), x1 = p.X(i + .82);
+        ctx.fillRect(x0, p.Y(a), x1 - x0, p.Y(0) - p.Y(a) + .5);
+        p.label(String(i + 1), i + .5, 0, { align: 'center', base: 'top', dy: 4, font: `10px ${css('--font-mono')}` });
+      });
+    };
+    function update() {
+      solve(); plot.render(); bars.render();
+      const st = $('#o-status');
+      if (!feasible) {
+        $('#o-read').innerHTML = '<div><dt>status</dt><dd>infeasible</dd></div>';
+        st.innerHTML = '<b class="bad">No separating line exists.</b> The constraints \\(y^{(i)}(w^\\top x^{(i)}+b)\\ge1\\) cannot all hold, so the hard-margin problem has no solution and the dual is unbounded. Experiment 4 handles this case with slack variables.';
+        Lab.typeset([st]);
+        hooks._opt = null; hooks.opt && hooks.opt(null);
+        return;
+      }
+      const nw = Math.hypot(w[0], w[1]);
+      const sumAY = s.alpha.reduce((acc, a, i) => acc + a * s.y[i], 0);
+      const nsv = s.alpha.filter(a => a > 1e-6).length;
+      $('#o-read').innerHTML = `
+        <div><dt>w = Σ αᵢ yᵢ xᵢ</dt><dd>(${fmt(w[0], 3)}, ${fmt(w[1], 3)})</dd></div>
+        <div><dt>b* from (6.13)</dt><dd>${fmt(b613, 3)}</dd></div>
+        <div><dt>margin γ = 1/‖w‖</dt><dd>${fmt(1 / nw, 3)}</dd></div>
+        <div><dt>Σ αᵢ yᵢ</dt><dd>${fmt(Math.abs(sumAY) < 1e-9 ? 0 : sumAY, 6)}</dd></div>
+        <div><dt>support vectors</dt><dd>${nsv} of ${pts.length}</dd></div>`;
+      st.innerHTML = `<b class="ok">Optimal margin found.</b> ${nsv} support vectors carry all the weight: \\(w\\) is a combination of exactly these points, and every other \\(\\alpha_i=0\\). Primal \\(\\tfrac12\\|w\\|^2=${fmt(nw * nw / 2, 4)}\\) equals dual \\(W(\\alpha)=${fmt(s.W(), 4)}\\).`;
+      Lab.typeset([st]);
+      hooks._opt = { s, w, b, b613, pts }; hooks.opt && hooks.opt(hooks._opt);
+    }
+    const pre = Lab.presets('o-presets', 'o-exp', {
+      three: { text: 'As in the lecture figure, exactly three points touch the margin (here one positive and two negative). Drag a point far from the line; the boundary does not move. Drag a support vector, and the whole solution changes.' },
+      two: { text: 'Here the closest pair of points fixes the solution alone: the boundary is the perpendicular bisector between them, and \\(\\alpha\\) is the same for both, as \\(\\sum_i\\alpha_iy^{(i)}=0\\) requires.' },
+      tight: { text: 'Two points of opposite classes almost touch. The margin is thin, \\(\\|w\\|\\) is large, and the \\(\\alpha_i\\) are large. A single noisy point dominates the hard-margin solution.' },
+      overlap: { text: 'One positive point sits deep among the negatives. No line separates the classes, so the constraints of (6.8) cannot be satisfied. The page draws nothing rather than a misleading line.' }
+    }, key => { pts = P(layouts[key]); update(); });
+    pre.select('three');
+  })();
+
+  /* =====================================================================
+     3. Duality
+     ===================================================================== */
+  (function duality() {
+    const t = Lab.range('d-t', { show: v => fmt(v, 2), on: () => { pre.clear(); draw(); } });
+    const a = Lab.range('d-a', { show: v => fmt(v, 2), on: () => { pre.clear(); draw(); } });
+    const pstar = () => 0.5 * Math.max(t(), 0) ** 2;
+    const thetaD = al => al * t() - 0.5 * al * al;
+    const prim = new Plot('d-primal', { xmin: -2, xmax: 3, ymin: -2.5, ymax: 4.5, pad: { l: 40, b: 30, t: 14, r: 12 } });
+    prim.draw = (p, ctx) => {
+      const tt = t(), al = a();
+      // infeasible band
+      ctx.fillStyle = css('--plot-grid'); ctx.globalAlpha = 1;
+      ctx.fillRect(p.o.pad.l, p.o.pad.t, Math.max(0, p.X(tt) - p.o.pad.l), p.ph);
+      p.axes({ xlabel: 'w', ylabel: 'value' });
+      p.label('infeasible: θ_P(w) = ∞', Math.max(p.v.xmin, tt) - 0.05, p.v.ymax, { align: 'right', base: 'top', dy: 6, font: `11px ${css('--font-body')}`, color: css('--muted') });
+      ctx.strokeStyle = css('--plot-axis'); ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.moveTo(p.X(tt), p.o.pad.t); ctx.lineTo(p.X(tt), p.o.pad.t + p.ph); ctx.stroke(); ctx.setLineDash([]);
+      p.curve(w => 0.5 * w * w, { color: css('--fg'), width: 2.4 });
+      p.curve(w => 0.5 * w * w + al * (tt - w), { color: css('--primary'), width: 2, dash: [6, 4] });
+      // minimiser of L at w = α
+      p.dot(al, thetaD(al), { r: 5, color: css('--primary') });
+      p.label(`min 𝓛 = θ_D(α) = ${fmt(thetaD(al), 2)}`, al, thetaD(al), { dx: 8, dy: 12, font: `11px ${css('--font-mono')}`, color: css('--primary') });
+      const ws = Math.max(tt, 0);
+      p.dot(ws, pstar(), { r: 5.5, color: css('--neg') });
+      p.label(`w* = ${fmt(ws, 2)}, p* = ${fmt(pstar(), 2)}`, ws, pstar(), { dx: 8, dy: -12, font: `11px ${css('--font-mono')}`, color: css('--neg') });
+    };
+    const dual = new Plot('d-dual', { xmin: 0, xmax: 3.5, ymin: -2.5, ymax: 2.5, pad: { l: 40, b: 30, t: 14, r: 12 } });
+    dual.draw = (p, ctx) => {
+      const tt = t(), al = a(), as = Math.max(tt, 0);
+      p.axes({ xlabel: 'α ≥ 0', ylabel: 'θ_D(α)' });
+      p.line(0, 1, -pstar(), { color: css('--neg'), width: 1.4, dash: [5, 4] });
+      p.label('p*', p.v.xmax, pstar(), { align: 'right', base: 'bottom', dx: -4, dy: -3, font: `italic 13px ${css('--font-display')}`, color: css('--neg') });
+      p.curve(thetaD, { color: css('--fg'), width: 2.4, x0: 0 });
+      p.dot(as, thetaD(as), { r: 5.5, color: css('--neg') });
+      p.label(`α* = ${fmt(as, 2)}, d* = ${fmt(thetaD(as), 2)}`, as, thetaD(as), { dx: 8, dy: 14, font: `11px ${css('--font-mono')}`, color: css('--neg') });
+      p.dot(al, thetaD(al), { r: 5, color: css('--primary') });
+      ctx.strokeStyle = css('--primary'); ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.moveTo(p.X(al), p.Y(thetaD(al))); ctx.lineTo(p.X(al), p.Y(pstar())); ctx.stroke(); ctx.setLineDash([]);
+    };
+    function draw() {
+      prim.render(); dual.render();
+      const tt = t(), al = a(), as = Math.max(tt, 0), ws = as, g = tt - ws;
+      $('#d-read').innerHTML = `
+        <div><dt>θ_D(α) at current α</dt><dd>${fmt(thetaD(al), 3)}</dd></div>
+        <div><dt>gap p* − θ_D(α)</dt><dd>${fmt(pstar() - thetaD(al), 3)}</dd></div>
+        <div><dt>α*, w*</dt><dd>${fmt(as, 2)}, ${fmt(ws, 2)}</dd></div>
+        <div><dt>g(w*) = t − w*</dt><dd>${fmt(g, 3)}</dd></div>
+        <div><dt>α* · g(w*)</dt><dd>${fmt(as * g, 3)}</dd></div>`;
+      const st = $('#d-status');
+      st.innerHTML = (tt > 0
+        ? `<b class="ok">Constraint active.</b> The unconstrained minimum \\(w=0\\) is infeasible, so \\(w^*=t\\) and \\(g(w^*)=0\\). The multiplier \\(\\alpha^*=${fmt(as, 2)}>0\\) is the price of the constraint.`
+        : `<b class="ok">Constraint inactive.</b> \\(w^*=0\\) already satisfies \\(w\\ge t\\), with \\(g(w^*)=${fmt(g, 2)}<0\\). Complementary slackness forces \\(\\alpha^*=0\\).`)
+        + ` Weak duality: \\(\\theta_D(\\alpha)=${fmt(thetaD(al), 2)}\\le p^*=${fmt(pstar(), 2)}\\) for every \\(\\alpha\\ge0\\); at \\(\\alpha^*\\) the bound is tight (\\(d^*=p^*\\)).`;
+      Lab.typeset([st]);
+    }
+    $('#d-opt').addEventListener('click', () => { a.set(Math.max(t(), 0)); pre.clear(); draw(); });
+    const pre = Lab.presets('d-presets', 'd-exp', {
+      active: { text: 'With \\(t=1\\) the constraint binds. Move \\(\\alpha\\): every value gives a lower bound \\(\\theta_D(\\alpha)\\le p^*=0.5\\), and the bound is tight only at \\(\\alpha^*=1\\). There \\(\\nabla_w\\mathcal L=w-\\alpha=0\\) gives \\(w^*=1\\): stationarity (6.3).' },
+      inactive: { text: 'With \\(t=-0.8\\) the minimum \\(w=0\\) is feasible. The dual is maximised at \\(\\alpha^*=0\\). This is (6.5): a strictly satisfied constraint has a zero multiplier, just like a non-support vector in the SVM.' },
+      loose: { text: 'A poor multiplier \\(\\alpha=2.8\\) for \\(t=1\\): the dashed Lagrangian dips far below \\(f\\), and its minimum \\(\\theta_D(\\alpha)\\) is a weak lower bound. The dual problem searches for the best such bound.' }
+    }, key => {
+      const cfg = { active: [1, 1], inactive: [-0.8, 0], loose: [1, 2.8] }[key];
+      t.set(cfg[0]); a.set(cfg[1]); draw();
+    });
+    pre.select('active');
+  })();
+
+  /* =====================================================================
+     4. Soft margin
+     ===================================================================== */
+  (function soft() {
+    const base = P([[-1.5, 1.6, 1], [-0.6, 1.9, 1], [0.4, 1.5, 1], [1.3, 1.8, 1], [-0.9, 1.0, 1], [0.9, 1.1, 1], [0.0, 2.3, 1],
+                    [-1.2, -0.9, -1], [-0.2, -1.3, -1], [0.8, -0.8, -1], [1.6, -1.4, -1], [-0.5, -0.2, -1], [1.2, -0.1, -1], [0.3, -1.9, -1]]);
+    const outlier = { x: -1.7, y: 0.75, l: -1 };
+    const outBox = $('#c-out'), hardBox = $('#c-hard');
+    const Cs = Lab.range('c-C', { map: v => Math.pow(10, v), show: v => v < 1 ? v.toFixed(3) : v.toFixed(1), on: () => { pre.clear(); solve(); } });
+    outBox.addEventListener('change', () => { pre.clear(); solveHard(); solve(); });
+    hardBox.addEventListener('change', () => plot.render());
+    let s, w, b, hard = null;
+    const pts = () => outBox.checked ? [...base, outlier] : base;
+    const XY = () => [pts().map(q => [q.x, q.y]), pts().map(q => q.l)];
+    function solveHard() {
+      const [X, y] = XY();
+      const h = new Lab.SMO(X, y, Lab.kernel('linear'), Infinity, 1e-6).solve(30000);
+      const hw = h.w(), hb = h.b;
+      hard = h.converged() && y.every((yy, i) => yy * (Lab.dot(hw, X[i]) + hb) >= 1 - 1e-3) ? { w: hw, b: hb } : null;
+    }
+    function solve() {
+      const [X, y] = XY();
+      s = new Lab.SMO(X, y, Lab.kernel('linear'), Cs(), 1e-5).solve(50000);
+      w = s.w(); b = s.b;
+      plot.render(); kkt.render(); readout();
+    }
+    const plot = new Plot('c-plot', { xmin: -2.6, xmax: 2.6, ymin: -2.6, ymax: 2.9, equal: true, pad: { l: 36, b: 30, t: 14, r: 12 } });
+    plot.draw = (p, ctx) => {
+      p.heat((x, y) => w[0] * x + w[1] * y + b, Lab.divergingColor(2, 0.18), 6);
+      p.axes({ xlabel: 'x₁', ylabel: 'x₂' });
+      if (hardBox.checked && hard) p.line(hard.w[0], hard.w[1], hard.b, { color: css('--muted'), width: 2, dash: [2, 4] });
+      drawLinear(p, w, b);
+      const nw2 = w[0] * w[0] + w[1] * w[1];
+      const P_ = pts();
+      P_.forEach((q, i) => {
+        const xi = Math.max(0, 1 - q.l * (w[0] * q.x + w[1] * q.y + b));
+        if (xi > 1e-6) {
+          const tx = q.x + q.l * xi * w[0] / nw2, ty = q.y + q.l * xi * w[1] / nw2;
+          ctx.strokeStyle = css('--bad'); ctx.lineWidth = 2.2;
+          ctx.beginPath(); ctx.moveTo(p.X(q.x), p.Y(q.y)); ctx.lineTo(p.X(tx), p.Y(ty)); ctx.stroke();
+          p.label(`ξ=${fmt(xi, 2)}`, q.x, q.y, { dx: -10, dy: 14, align: 'right', font: `11px ${css('--font-mono')}`, color: css('--bad') });
+        }
+      });
+      P_.forEach((q, i) => p.marker(q.x, q.y, q.l, { r: 6, ring: s.alpha[i] > 1e-6, ringColor: s.alpha[i] >= s.C - 1e-6 ? css('--bad') : css('--fg') }));
+    };
+    Lab.drag(plot, {
+      pts, onMove: (i, x, y) => { const q = pts()[i]; q.x = x; q.y = y; pre.clear(); solveHard(); solve(); }
+    });
+    const kkt = new Plot('c-kkt', { xmin: -1.5, xmax: 3.5, ymin: 0, ymax: 1, pad: { l: 50, b: 34, t: 30, r: 12 } });
+    let kres = { clipped: 0, viol: 0 };
+    kkt.draw = (p, ctx) => { kres = drawKKT(p, ctx, s, s.C); };
+    function readout() {
+      const nw = Math.hypot(w[0], w[1]);
+      const P_ = pts();
+      const xis = P_.map(q => Math.max(0, 1 - q.l * (w[0] * q.x + w[1] * q.y + b)));
+      const free = s.alpha.filter(a => a > 1e-6 && a < s.C - 1e-6).length, bound = s.alpha.filter(a => a >= s.C - 1e-6).length;
+      const wrong = P_.filter(q => q.l * (w[0] * q.x + w[1] * q.y + b) < 0).length;
+      $('#c-read').innerHTML = `
+        <div><dt>margin width 2/‖w‖</dt><dd>${fmt(2 / nw, 3)}</dd></div>
+        <div><dt>Σ ξᵢ</dt><dd>${fmt(xis.reduce((x, y) => x + y, 0), 3)}</dd></div>
+        <div><dt>objective</dt><dd>${fmt(nw * nw / 2 + s.C * xis.reduce((x, y) => x + y, 0), 3)}</dd></div>
+        <div><dt>0 &lt; α &lt; C  ·  α = C</dt><dd>${free}  ·  ${bound}</dd></div>
+        <div><dt>training errors</dt><dd>${wrong}</dd></div>`;
+      const st = $('#c-status');
+      const hardMsg = outBox.checked ? (hard ? `The dotted hard-margin line (C = ∞) has margin width ${fmt(2 / Math.hypot(hard.w[0], hard.w[1]), 2)}.` : 'The data are not separable, so no hard-margin line exists.') : '';
+      st.innerHTML = `${kres.viol === 0 ? '<b class="ok">KKT conditions hold for every point.</b>' : `<b class="bad">${kres.viol} KKT violation(s).</b>`} Points with α = C (red rings) are inside the margin or misclassified; points with 0 &lt; α &lt; C sit exactly on it. ${hardMsg}${kres.clipped ? ` ${kres.clipped} point(s) lie beyond the KKT plot's x-range and are drawn at its edge with a grey ring.` : ''}`;
+      hooks._soft = { s, free, bound, zero: s.n - free - bound, C: s.C, viol: kres.viol }; hooks.soft && hooks.soft(hooks._soft);
+    }
+    const pre = Lab.presets('c-presets', 'c-exp', {
+      clean: { text: 'Without the outlier the classes separate with a wide margin. For moderate \\(C\\) the soft- and hard-margin solutions nearly agree.' },
+      hard: { text: 'With \\(C=1000\\) slack is so expensive that the solution matches the hard margin: the line tilts to squeeze between the outlier and the positive points, and the margin collapses, as in the lecture figure.' },
+      soft: { text: 'With \\(C=0.3\\) the outlier is allowed a large slack \\(\\xi\\) (red segment). It is capped at \\(\\alpha=C\\) and can no longer drag the boundary. The margin is wide again and fits the bulk of the data.' },
+      tiny: { text: 'Very small \\(C\\): margin width is almost free, so many points end up inside the margin with \\(\\alpha_i=C\\). The boundary is driven by averages of many points rather than by a few support vectors.' }
+    }, key => {
+      const cfg = { clean: [false, 0], hard: [true, 3], soft: [true, Math.log10(0.3)], tiny: [true, Math.log10(0.02)] }[key];
+      outBox.checked = cfg[0]; Cs.set(cfg[1]);
+      solveHard(); solve();
+    });
+    pre.select('hard');
+  })();
+
+  /* =====================================================================
+     5. Kernel SVM
+     ===================================================================== */
+  (function kernelSVM() {
+    const root = $('#m-kernel');
+    function gen(key) {
+      const r = Lab.rng({ ring: 11, xor: 12, moons: 13, blobs: 14 }[key]), out = [];
+      if (key === 'ring') {
+        for (let i = 0; i < 26; i++) { const a = 2 * Math.PI * r(), rad = 0.65 * Math.sqrt(r()); out.push({ x: rad * Math.cos(a), y: rad * Math.sin(a), l: 1 }); }
+        for (let i = 0; i < 34; i++) { const a = 2 * Math.PI * r(), rad = 1.55 + 0.3 * r.normal(); out.push({ x: rad * Math.cos(a), y: rad * Math.sin(a), l: -1 }); }
+      } else if (key === 'xor') {
+        [[1, 1], [-1, -1], [1, -1], [-1, 1]].forEach(([cx, cy]) => { for (let i = 0; i < 14; i++) out.push({ x: cx + 0.38 * r.normal(), y: cy + 0.38 * r.normal(), l: cx * cy > 0 ? 1 : -1 }); });
+      } else if (key === 'moons') {
+        for (let i = 0; i < 30; i++) { const a = Math.PI * r(); out.push({ x: 1.5 * Math.cos(a) - 0.6 + 0.15 * r.normal(), y: 1.5 * Math.sin(a) - 0.4 + 0.15 * r.normal(), l: 1 }); }
+        for (let i = 0; i < 30; i++) { const a = Math.PI * r(); out.push({ x: 0.6 - 1.5 * Math.cos(a) + 0.15 * r.normal(), y: 0.4 - 1.5 * Math.sin(a) + 0.15 * r.normal(), l: -1 }); }
+      } else {
+        for (let i = 0; i < 30; i++) out.push({ x: 0.8 + 0.6 * r.normal(), y: 0.7 + 0.6 * r.normal(), l: 1 });
+        for (let i = 0; i < 30; i++) out.push({ x: -0.8 + 0.6 * r.normal(), y: -0.7 + 0.6 * r.normal(), l: -1 });
+      }
+      return out.map(q => ({ x: Lab.clamp(q.x, -2.4, 2.4), y: Lab.clamp(q.y, -2.4, 2.4), l: q.l }));
+    }
+    let pts = gen('ring'), s;
+    const data = Lab.seg('k-data', key => { pts = gen(key); pre.clear(); solve(); });
+    const type = Lab.seg('k-type', () => { showFor(root, type()); pre.clear(); solve(); });
+    const kk = Lab.range('k-k', { on: () => { pre.clear(); solve(); } });
+    const cc = Lab.range('k-c', { show: v => v.toFixed(2), on: () => { pre.clear(); solve(); } });
+    const sig = Lab.range('k-s', { map: v => Math.exp(v), show: v => v.toFixed(3), on: () => { pre.clear(); solve(); } });
+    const Cs = Lab.range('k-C', { map: v => Math.pow(10, v), show: v => v < 1 ? v.toFixed(2) : v.toFixed(1), on: () => { pre.clear(); solve(); } });
+    const kfn = () => type() === 'linear' ? Lab.kernel('linear') : type() === 'poly' ? Lab.kernel('poly', { k: kk(), c: cc() }) : Lab.kernel('rbf', { sigma: sig() });
+    let conv = true;
+    function solve() {
+      s = new Lab.SMO(pts.map(q => [q.x, q.y]), pts.map(q => q.l), kfn(), Cs(), 1e-3).solve(40000);
+      conv = s.converged();
+      s._b = s.b;
+      plot.render(); kkt.render(); readout();
+    }
+    const plot = new Plot('k-plot', { xmin: -2.5, xmax: 2.5, ymin: -2.5, ymax: 2.5, equal: true, pad: { l: 36, b: 30, t: 14, r: 12 } });
+    plot.draw = (p, ctx) => {
+      const f = (x, y) => s.f([x, y], s._b);
+      p.heat(f, Lab.divergingColor(1.5, 0.5), 5);
+      p.axes({ xlabel: 'x₁', ylabel: 'x₂' });
+      p.contour(f, 0, { color: css('--fg'), width: 2.4, res: 5 });
+      p.contour(f, 1, { color: css('--muted'), width: 1.3, dash: [5, 4], res: 5 });
+      p.contour(f, -1, { color: css('--muted'), width: 1.3, dash: [5, 4], res: 5 });
+      pts.forEach((q, i) => p.marker(q.x, q.y, q.l, { r: 5, ring: s.alpha[i] > 1e-6, ringColor: s.alpha[i] >= s.C - 1e-6 ? css('--bad') : css('--fg') }));
+    };
+    Lab.drag(plot, { pts: () => pts, onMove: (i, x, y) => { pts[i].x = x; pts[i].y = y; solve(); } });
+    const kkt = new Plot('k-kkt', { xmin: -1.5, xmax: 3.5, ymin: 0, ymax: 1, pad: { l: 50, b: 34, t: 30, r: 12 } });
+    let kres = { clipped: 0, viol: 0 };
+    kkt.draw = (p, ctx) => { kres = drawKKT(p, ctx, s, s.C); };
+    function readout() {
+      const nsv = s.alpha.filter(a => a > 1e-6).length, bound = s.alpha.filter(a => a >= s.C - 1e-6).length;
+      const acc = pts.filter((q, i) => q.l * s.fTrain(i, s._b) > 0).length / pts.length;
+      $('#k-read').innerHTML = `
+        <div><dt>support vectors</dt><dd>${nsv} of ${pts.length}</dd></div>
+        <div><dt>at bound α = C</dt><dd>${bound}</dd></div>
+        <div><dt>training accuracy</dt><dd>${(100 * acc).toFixed(1)} %</dd></div>
+        <div><dt>dual W(α)</dt><dd>${fmt(s.W(), 3)}</dd></div>
+        <div><dt>SMO steps</dt><dd>${s.iter}${conv ? '' : ' (cap reached)'}</dd></div>`;
+      const st = $('#k-status'), tp = type();
+      let msg;
+      if (tp === 'linear') msg = acc < 0.9 ? '<b class="bad">A straight line cannot separate these classes.</b> Many points sit at α = C. Try a polynomial or Gaussian kernel.' : '<b class="ok">A line works for these data.</b>';
+      else if (tp === 'rbf' && sig() < 0.2) msg = `<b class="bad">Very local kernel (σ = ${sig().toFixed(2)}).</b> Almost every point is a support vector, and the boundary wraps around individual points. Training accuracy is high, but the islands will not generalise.`;
+      else msg = `<b class="ok">Nonlinear boundary from a linear method.</b> The SVM is linear in the feature space of \\(K\\); only ${nsv} of ${pts.length} points define it.`;
+      st.innerHTML = msg + (kres.viol ? ` <b class="bad">${kres.viol} KKT violation(s) remain.</b>` : '');
+      Lab.typeset([st]);
+    }
+    const pre = Lab.presets('k-presets', 'k-exp', {
+      linring: { text: 'Inner disc against an outer ring. No line separates them, and the linear SVM puts many points at \\(\\alpha=C\\). Training accuracy stays near the share of the larger class.' },
+      polyring: { text: '\\(K(x,z)=(x^\\top z)^2\\) has features \\((x_1^2,\\sqrt2x_1x_2,x_2^2)\\). The ring condition \\(x_1^2+x_2^2>r^2\\) is linear in them, so the boundary becomes an ellipse.' },
+      xor: { text: 'XOR cannot be split by any line. A Gaussian kernel with \\(\\sigma=1\\) builds the four-quadrant pattern from bumps around the support vectors.' },
+      overfit: { text: 'With \\(\\sigma=0.1\\) and large \\(C\\), each point gets its own bump. Nearly all points become support vectors, and the boundary forms islands: training accuracy 100 %, poor generalisation.' }
+    }, key => {
+      const cfg = {
+        linring: ['ring', 'linear', 1], polyring: ['ring', 'poly', 1, 2, 0], xor: ['xor', 'rbf', 3, Math.log(1)],
+        overfit: ['moons', 'rbf', 3, Math.log(0.1)]
+      }[key];
+      pts = gen(cfg[0]); data.set(cfg[0]); type.set(cfg[1]); showFor(root, cfg[1]); Cs.set(cfg[2]);
+      if (cfg[1] === 'poly') { kk.set(cfg[3]); cc.set(cfg[4]); }
+      if (cfg[1] === 'rbf') sig.set(cfg[3]);
+      solve();
+    });
+    pre.select('polyring');
+  })();
+
+  /* =====================================================================
+     6. SMO
+     ===================================================================== */
+  (function smo() {
+    const pts = P([[-1.5, 1.6, 1], [-0.6, 1.9, 1], [0.4, 1.5, 1], [1.3, 1.8, 1], [-0.9, 1.0, 1], [0.9, 1.1, 1], [0.1, 0.4, 1],
+                   [-1.2, -0.9, -1], [-0.2, -1.3, -1], [0.8, -0.8, -1], [1.6, -1.4, -1], [-0.5, -0.2, -1], [1.2, 0.5, -1], [-1.7, 0.75, -1]]);
+    const type = Lab.seg('m-type', () => { pre.clear(); reset(); });
+    const Cs = Lab.range('m-C', { map: v => Math.pow(10, v), show: v => v.toFixed(2), on: () => { pre.clear(); reset(); } });
+    let s, last = null, hist = [];
+    const kfn = () => type() === 'linear' ? Lab.kernel('linear') : Lab.kernel('rbf', { sigma: 0.8 });
+    function reset() {
+      s = new Lab.SMO(pts.map(q => [q.x, q.y]), pts.map(q => q.l), kfn(), Cs(), 1e-3);
+      last = null; hist = [{ W: 0 }];
+      render();
+      $('#m-log').innerHTML = 'α = 0 is feasible (all constraints hold). Press <b>Next pair</b>.';
+    }
+    // geometry of the pair subproblem before the step
+    function pairGeometry(i, j) {
+      const y = s.y, a = s.alpha, C = s.C, G = s.G, K = s.K;
+      const zeta = a[i] * y[i] + a[j] * y[j], sgn = y[i] * y[j];
+      let L, H;
+      if (sgn < 0) { L = Math.max(0, a[j] - a[i]); H = Math.min(C, C + a[j] - a[i]); }
+      else { L = Math.max(0, a[i] + a[j] - C); H = Math.min(C, a[i] + a[j]); }
+      const eta = K[i][i] + K[j][j] - 2 * K[i][j];
+      const slope = -(G[j] - sgn * G[i]); // dW/dα_j along the line
+      const W0 = s.W();
+      const Wline = aj => { const d = aj - a[j]; return W0 + slope * d - 0.5 * eta * d * d; };
+      const unclipped = eta > 1e-12 ? a[j] + slope / eta : (slope > 0 ? Infinity : -Infinity);
+      return { i, j, zeta, sgn, L, H, eta, Wline, unclipped, clipped: Lab.clamp(unclipped, L, H), ai: a[i], aj: a[j], yi: y[i], yj: y[j], C };
+    }
+    function next() {
+      const sel = s.select();
+      if (sel.i < 0 || sel.j < 0 || sel.gap < s.tol) {
+        $('#m-log').innerHTML = `<b>Converged</b> after ${s.iter} pair updates: the largest KKT violation gap is ${fmt(Math.max(sel.gap, 0), 5)} &lt; tol.`;
+        render(); return false;
+      }
+      const g = pairGeometry(sel.i, sel.j);
+      const info = s.step();
+      g.newAi = info.after[0]; g.newAj = info.after[1];
+      last = g; hist.push({ W: s.W() });
+      $('#m-log').innerHTML = `step ${s.iter}: pair (i, j) = (${g.i + 1}, ${g.j + 1}), y = (${g.yi > 0 ? '+1' : '−1'}, ${g.yj > 0 ? '+1' : '−1'}), ζ = ${fmt(g.zeta, 3)}<br>` +
+        `αⱼ: ${fmt(g.aj, 3)} → unclipped ${fmt(g.unclipped, 3)} → clipped to [L, H] = [${fmt(g.L, 3)}, ${fmt(g.H, 3)}] → <b>${fmt(g.newAj, 3)}</b>;  ` +
+        `αᵢ = (ζ − αⱼyⱼ)yᵢ: ${fmt(g.ai, 3)} → <b>${fmt(g.newAi, 3)}</b>${Math.abs(g.clipped - g.newAj) > 1e-9 ? ' (numerical guard applied)' : ''}`;
+      return true;
+    }
+    const plot = new Plot('m-plot', { xmin: -2.4, xmax: 2.4, ymin: -2.3, ymax: 2.5, equal: true, pad: { l: 36, b: 30, t: 14, r: 12 } });
+    plot.draw = (p, ctx) => {
+      const b = s.b, f = (x, y) => s.f([x, y], b);
+      const any = s.alpha.some(a => a > 1e-9);
+      if (any) p.heat(f, Lab.divergingColor(1.5, 0.35), 6);
+      p.axes({ xlabel: 'x₁', ylabel: 'x₂' });
+      if (any) {
+        p.contour(f, 0, { color: css('--fg'), width: 2.2 });
+        p.contour(f, 1, { color: css('--muted'), width: 1.2, dash: [5, 4] });
+        p.contour(f, -1, { color: css('--muted'), width: 1.2, dash: [5, 4] });
+      }
+      pts.forEach((q, t) => {
+        p.marker(q.x, q.y, q.l, { r: 6, ring: s.alpha[t] > 1e-6 });
+        p.label(String(t + 1), q.x, q.y, { dx: -12, dy: -10, align: 'right', font: `10px ${css('--font-mono')}`, color: css('--muted') });
+      });
+      if (last) [last.i, last.j].forEach((t, k) => {
+        ctx.strokeStyle = css('--bad'); ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(p.X(pts[t].x), p.Y(pts[t].y), 13, 0, 2 * Math.PI); ctx.stroke();
+        p.label(k ? 'j' : 'i', pts[t].x, pts[t].y, { dx: 15, dy: -12, font: `italic 600 15px ${css('--font-display')}`, color: css('--bad') });
+      });
+    };
+    const box = new Plot('m-box', { xmin: 0, xmax: 1, ymin: 0, ymax: 1, equal: true, pad: { l: 44, b: 36, t: 30, r: 16 } });
+    box.draw = (p, ctx) => {
+      const C = s.C;
+      p.o.xmin = -0.15 * C; p.o.xmax = 1.15 * C; p.o.ymin = -0.15 * C; p.o.ymax = 1.15 * C; p.layout();
+      p.axes({ xlabel: 'αᵢ', ylabel: 'αⱼ', zero: false });
+      ctx.fillStyle = css('--primary-soft'); ctx.strokeStyle = css('--primary'); ctx.lineWidth = 1.5;
+      ctx.fillRect(p.X(0), p.Y(C), C * p.sx, C * p.sy); ctx.strokeRect(p.X(0), p.Y(C), C * p.sx, C * p.sy);
+      p.label('C', 0, C, { dx: -6, align: 'right', font: `11px ${css('--font-mono')}`, color: css('--primary') });
+      if (!last) { p.label('press Next pair', C / 2, C / 2, { align: 'center', color: css('--muted') }); return; }
+      const g = last;
+      // α_i as a function of α_j: α_i = y_i ζ − sgn α_j
+      const ai = aj => g.yi * g.zeta - g.sgn * aj;
+      // full line across view (thin) and feasible segment (thick)
+      const ext = [p.v.ymin, p.v.ymax];
+      ctx.strokeStyle = css('--muted'); ctx.lineWidth = 1.2; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(p.X(ai(ext[0])), p.Y(ext[0])); ctx.lineTo(p.X(ai(ext[1])), p.Y(ext[1])); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = css('--fg'); ctx.lineWidth = 3.2;
+      ctx.beginPath(); ctx.moveTo(p.X(ai(g.L)), p.Y(g.L)); ctx.lineTo(p.X(ai(g.H)), p.Y(g.H)); ctx.stroke();
+      p.label('L', ai(g.L), g.L, { dx: 8, dy: 6, font: `600 12px ${css('--font-mono')}` });
+      p.label('H', ai(g.H), g.H, { dx: 8, dy: -6, font: `600 12px ${css('--font-mono')}` });
+      p.dot(g.ai, g.aj, { r: 5, color: css('--muted') });
+      if (isFinite(g.unclipped) && Math.abs(g.unclipped - g.clipped) > 1e-9) {
+        ctx.save(); ctx.strokeStyle = css('--bad'); ctx.lineWidth = 1.6;
+        const ux = ai(g.unclipped), uy = g.unclipped;
+        ctx.beginPath(); ctx.arc(p.X(ux), p.Y(uy), 5, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+      }
+      p.arrow(g.ai, g.aj, g.newAi, g.newAj, { color: css('--bad'), width: 2 });
+      p.dot(g.newAi, g.newAj, { r: 5.5, color: css('--bad') });
+      p.label(`αᵢyᵢ + αⱼyⱼ = ζ = ${fmt(g.zeta, 2)}`, p.v.xmin, p.v.ymax, { dx: 6, dy: 10, font: `11px ${css('--font-mono')}`, color: css('--muted') });
+    };
+    const par = new Plot('m-par', { xmin: 0, xmax: 1, ymin: 0, ymax: 1, pad: { l: 50, b: 36, t: 30, r: 16 } });
+    par.draw = (p, ctx) => {
+      const C = s.C;
+      if (!last) { p.o.xmin = -0.15 * C; p.o.xmax = 1.15 * C; p.layout(); p.axes({ xlabel: 'αⱼ' }); return; }
+      const g = last;
+      const x0 = -0.15 * C, x1 = 1.15 * C;
+      let lo = Infinity, hi = -Infinity;
+      for (let k = 0; k <= 60; k++) { const v = g.Wline(x0 + (x1 - x0) * k / 60); lo = Math.min(lo, v); hi = Math.max(hi, v); }
+      const m = (hi - lo) * 0.12 || 0.1;
+      p.o.xmin = x0; p.o.xmax = x1; p.o.ymin = lo - m; p.o.ymax = hi + m; p.layout();
+      ctx.fillStyle = css('--primary-soft');
+      ctx.fillRect(p.X(g.L), p.o.pad.t, Math.max(1.5, (g.H - g.L) * p.sx), p.ph);
+      p.axes({ xlabel: 'αⱼ', ylabel: 'W', zero: false });
+      p.curve(g.Wline, { color: css('--muted'), width: 1.4, dash: [4, 4] });
+      p.curve(g.Wline, { color: css('--fg'), width: 2.4, x0: g.L, x1: g.H });
+      if (isFinite(g.unclipped) && g.unclipped > p.v.xmin && g.unclipped < p.v.xmax) {
+        ctx.strokeStyle = css('--bad'); ctx.setLineDash([3, 3]); ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.moveTo(p.X(g.unclipped), p.o.pad.t); ctx.lineTo(p.X(g.unclipped), p.o.pad.t + p.ph); ctx.stroke(); ctx.setLineDash([]);
+        p.label('unclipped', g.unclipped, p.v.ymax, { dx: 4, dy: 8, font: `10.5px ${css('--font-body')}`, color: css('--bad') });
+      }
+      p.dot(g.aj, g.Wline(g.aj), { r: 4.5, color: css('--muted') });
+      p.dot(g.newAj, g.Wline(g.newAj), { r: 5.5, color: css('--bad') });
+      p.label('L', g.L, p.v.ymin, { align: 'center', base: 'bottom', dy: -3, font: `600 11px ${css('--font-mono')}` });
+      p.label('H', g.H, p.v.ymin, { align: 'center', base: 'bottom', dy: -3, font: `600 11px ${css('--font-mono')}` });
+    };
+    function render() {
+      plot.render(); box.render(); par.render();
+      const sel = s.select(), nsv = s.alpha.filter(a => a > 1e-6).length;
+      const viol = s.y.reduce((c, y, t) => c + (kktViolated(s.alpha[t], y * s.fTrain(t), s.C, 1e-2) ? 1 : 0), 0);
+      $('#m-read').innerHTML = `
+        <div><dt>pair updates</dt><dd>${s.iter}</dd></div>
+        <div><dt>dual W(α)</dt><dd>${fmt(s.W(), 4)}</dd></div>
+        <div><dt>Σ αᵢ yᵢ</dt><dd>${fmt(Math.abs(s.alpha.reduce((a, v, t) => a + v * s.y[t], 0)) < 1e-12 ? 0 : s.alpha.reduce((a, v, t) => a + v * s.y[t], 0), 6)}</dd></div>
+        <div><dt>KKT violators (tol 0.01)</dt><dd>${viol}</dd></div>
+        <div><dt>α &gt; 0</dt><dd>${nsv} of ${s.n}</dd></div>`;
+      const st = $('#m-status');
+      const done = sel.gap < s.tol;
+      const mono = hist.every((h, k) => k === 0 || h.W >= hist[k - 1].W - 1e-12);
+      st.innerHTML = done
+        ? `<b class="ok">Converged.</b> All KKT conditions hold to within tolerance; the boundary is the soft-margin SVM for C = ${s.C.toFixed(2)}.`
+        : `${mono ? '<b class="ok">W(α) has increased (or stayed equal) at every step</b>, and Σ αᵢyᵢ = 0 throughout.' : '<b class="bad">W decreased</b>'} Largest KKT gap: ${fmt(sel.gap, 4)}.`;
+    }
+    $('#m-step').addEventListener('click', () => { next(); render(); });
+    $('#m-run').addEventListener('click', () => { let k = 0; while (k++ < 20000 && next()); render(); });
+    $('#m-reset').addEventListener('click', reset);
+    const pre = Lab.presets('m-presets', 'm-exp', {
+      lin: { text: 'Press <b>Next pair</b> a few times. Each step moves the red point along the black segment in the box, never leaving it; the dual objective \\(W\\) never decreases. Points 7 and 13 lie on the wrong side of the final boundary and end at \\(\\alpha=C\\).' },
+      gauss: { text: 'Same algorithm, Gaussian kernel. Only \\(K_{ij}\\) changed: the parabola\'s curvature is \\(\\eta=K_{ii}+K_{jj}-2K_{ij}\\). The boundary curves around the misplaced points.' },
+      smallC: { text: 'With \\(C=0.1\\) the box is small. Most unclipped maximisers land outside \\([L,H]\\) (red hollow circle) and get clipped to a corner, so many \\(\\alpha_i\\) end exactly at 0 or \\(C\\).' }
+    }, key => {
+      const cfg = { lin: ['linear', 0], gauss: ['rbf', Math.log10(3)], smallC: ['linear', -1] }[key];
+      type.set(cfg[0]); Cs.set(cfg[1]); reset();
+    });
+    pre.select('lin');
+
+    // coordinate ascent
+    const rho = Lab.range('ca-r', { show: v => v.toFixed(2), on: () => ca.render() });
+    const ca = new Plot('ca-plot', { xmin: -3, xmax: 3, ymin: -2.6, ymax: 2.6, equal: true, pad: { l: 36, b: 30, t: 14, r: 12 } });
+    ca.draw = (p, ctx) => {
+      const r = rho();
+      p.axes({ xlabel: 'α₁', ylabel: 'α₂' });
+      // contours of αᵀAα = c²: eigenvalues 1±ρ along (1,1)/√2 and (1,−1)/√2
+      ctx.strokeStyle = css('--plot-axis'); ctx.lineWidth = 1;
+      [0.5, 1, 1.5, 2, 2.5, 3, 3.5].forEach(c => {
+        ctx.beginPath();
+        for (let k = 0; k <= 120; k++) {
+          const t = 2 * Math.PI * k / 120, u = c * Math.cos(t) / Math.sqrt(1 + r), v = c * Math.sin(t) / Math.sqrt(1 - r);
+          const x = (u + v) / Math.SQRT2, y = (u - v) / Math.SQRT2;
+          k ? ctx.lineTo(p.X(x), p.Y(y)) : ctx.moveTo(p.X(x), p.Y(y));
+        }
+        ctx.stroke();
+      });
+      let a = [2, -2], steps = 0;
+      ctx.strokeStyle = css('--bad'); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p.X(a[0]), p.Y(a[1]));
+      while (Math.hypot(a[0], a[1]) > 1e-3 && steps < 400) {
+        if (steps % 2 === 0) a = [-r * a[1], a[1]]; else a = [a[0], -r * a[0]];
+        ctx.lineTo(p.X(a[0]), p.Y(a[1])); steps++;
+      }
+      ctx.stroke();
+      p.dot(2, -2, { r: 5, color: css('--fg') });
+      p.label('start (2, −2)', 2, -2, { dx: 8, dy: 10, font: `11px ${css('--font-mono')}` });
+      p.dot(0, 0, { r: 4, color: css('--neg') });
+      $('#ca-out').innerHTML = `<span>Current result</span>${steps} coordinate updates to get within 10⁻³ of the maximum. Each pair of updates shrinks the distance by a factor ρ² = ${(r * r).toFixed(2)}. Strongly coupled variables (ρ near 1) make single-coordinate steps slow.`;
+    };
+  })();
+
+  /* =====================================================================
+     Questions
+     ===================================================================== */
+  (function questions() {
+    // S1
+    const c1 = Lab.range('q1-c', { show: v => v.toFixed(1), on: q1 });
+    function q1() {
+      const c = c1(), fm = c * (2 + 1 - 1), nw = c * Math.SQRT2;
+      $('#q1-out').innerHTML = `(cw, cb) = ((${fmt(c, 1)}, ${fmt(c, 1)}), ${fmt(-c, 1)})<br>γ̂ = y(cwᵀx + cb) = <b>${fmt(fm, 3)}</b><br>‖cw‖ = ${fmt(nw, 3)}<br>γ = γ̂/‖cw‖ = <b>${fmt(fm / nw, 3)}</b> (= 2/√2 for every c)`;
+    }
+    q1();
+    // S2
+    const x2 = Lab.range('q2-x', { show: v => fmt(v, 2), on: () => q2p.render() });
+    const W2 = [1, 2], B2 = -2, N2 = Math.hypot(1, 2);
+    const q2p = new Plot('q2-plot', { xmin: -2, xmax: 3.5, ymin: -0.6, ymax: 2.4, equal: true, pad: { l: 30, b: 24, t: 10, r: 10 } });
+    q2p.draw = (p, ctx) => {
+      p.axes({});
+      p.line(W2[0], W2[1], B2, { color: css('--fg'), width: 2 });
+      const A = [x2(), 1.5], g = (Lab.dot(W2, A) + B2) / N2, B = [A[0] - g * W2[0] / N2, A[1] - g * W2[1] / N2];
+      ctx.strokeStyle = g >= 0 ? css('--primary') : css('--bad'); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(p.X(A[0]), p.Y(A[1])); ctx.lineTo(p.X(B[0]), p.Y(B[1])); ctx.stroke();
+      p.marker(A[0], A[1], 1, { r: 5 });
+      p.dot(B[0], B[1], { r: 4, color: css('--fg') });
+      p.label('A', A[0], A[1], { dx: 8, dy: -8, font: `600 12px ${css('--font-body')}` });
+      p.label('B', B[0], B[1], { dx: 8, dy: 8, font: `600 12px ${css('--font-body')}` });
+      $('#q2-out').innerHTML = `wᵀA + b = ${fmt(Lab.dot(W2, A) + B2, 3)}, ‖w‖ = √5 = ${fmt(N2, 3)}<br>γ = <b>${fmt(g, 3)}</b>${g < 0 ? ' (negative: A is on the wrong side)' : ''}<br>B = A − γ w/‖w‖ = (${fmt(B[0], 3)}, ${fmt(B[1], 3)}), wᵀB + b = ${fmt(Lab.dot(W2, B) + B2, 6)}`;
+    };
+    // S3, S4 from Experiment 2
+    hooks.opt = info => {
+      if (!info) {
+        $('#q3-out').innerHTML = $('#q4-out').innerHTML = 'The data in Experiment 2 are currently not separable, so there is no \\(w^*\\). Choose a separable preset there.';
+        Lab.typeset([$('#q3-out'), $('#q4-out')]);
+        return;
+      }
+      const { s, w, b, b613, pts } = info;
+      const proj = pts.map(q => Lab.dot(w, [q.x, q.y]));
+      const mp = Math.min(...proj.filter((_, i) => pts[i].l > 0)), mm = Math.max(...proj.filter((_, i) => pts[i].l < 0));
+      $('#q3-out').innerHTML = `w* = (${fmt(w[0], 3)}, ${fmt(w[1], 3)})<br>m₊ = min over y = +1 of w*ᵀx = ${fmt(mp, 3)}<br>m₋ = max over y = −1 of w*ᵀx = ${fmt(mm, 3)}<br>b* = −(m₋ + m₊)/2 = <b>${fmt(b613, 4)}</b><br>b from the dual solver (KKT average): ${fmt(b, 4)}`;
+      const nw = Math.hypot(w[0], w[1]);
+      const sv = s.alpha.map((a, i) => [a, i]).filter(([a]) => a > 1e-6);
+      $('#q4-out').innerHTML = `α &gt; 0 only for points ${sv.map(([, i]) => i + 1).join(', ')}; all other ${s.n - sv.length} αᵢ = 0<br>Σ αᵢ yᵢ = ${fmt(s.alpha.reduce((a, v, i) => a + v * s.y[i], 0), 6)}<br>primal ½‖w‖² = <b>${fmt(nw * nw / 2, 5)}</b><br>dual W(α) = <b>${fmt(s.W(), 5)}</b>`;
+    };
+    // S5 from Experiment 4
+    hooks.soft = info => {
+      $('#q5-out').innerHTML = `C = ${fmt(info.C, 3)}<br>αᵢ = 0: ${info.zero} points (outside the margin)<br>0 &lt; αᵢ &lt; C: ${info.free} points (on the margin)<br>αᵢ = C: ${info.bound} points (inside the margin or misclassified)<br>KKT violations: ${info.viol}`;
+    };
+    hooks.opt(hooks._opt);
+    if (hooks._soft) hooks.soft(hooks._soft);
+    // S6
+    const ysame = Lab.seg('q6-y', q6);
+    const a1 = Lab.range('q6-a1', { show: v => v.toFixed(2), on: q6 });
+    const a2 = Lab.range('q6-a2', { show: v => v.toFixed(2), on: q6 });
+    const q6p = new Plot('q6-plot', { xmin: -0.15, xmax: 1.15, ymin: -0.15, ymax: 1.15, equal: true, pad: { l: 30, b: 24, t: 10, r: 10 } });
+    let geo = null;
+    q6p.draw = (p, ctx) => {
+      p.axes({ xlabel: 'α₁', ylabel: 'α₂', zero: false });
+      ctx.fillStyle = css('--primary-soft'); ctx.strokeStyle = css('--primary');
+      ctx.fillRect(p.X(0), p.Y(1), p.sx, p.sy); ctx.strokeRect(p.X(0), p.Y(1), p.sx, p.sy);
+      if (!geo) return;
+      const { same, A1, A2, L, H } = geo;
+      const f1 = v2 => same ? A1 + A2 - v2 : v2 - (A2 - A1); // α₁ as function of α₂
+      ctx.strokeStyle = css('--muted'); ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(p.X(f1(-0.15)), p.Y(-0.15)); ctx.lineTo(p.X(f1(1.15)), p.Y(1.15)); ctx.stroke(); ctx.setLineDash([]);
+      if (L <= H) {
+        ctx.strokeStyle = css('--fg'); ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(p.X(f1(L)), p.Y(L)); ctx.lineTo(p.X(f1(H)), p.Y(H)); ctx.stroke();
+      }
+      p.dot(A1, A2, { r: 5, color: css('--bad') });
+    };
+    function q6() {
+      const same = ysame() === 'same', A1 = a1(), A2 = a2();
+      const L = same ? Math.max(0, A1 + A2 - 1) : Math.max(0, A2 - A1);
+      const H = same ? Math.min(1, A1 + A2) : Math.min(1, 1 + A2 - A1);
+      geo = { same, A1, A2, L, H };
+      q6p.render();
+      $('#q6-out').innerHTML = `${same ? 'α₁ + α₂' : 'α₂ − α₁'} = ${fmt(same ? A1 + A2 : A2 - A1, 2)} stays fixed<br>L = <b>${fmt(L, 2)}</b>, H = <b>${fmt(H, 2)}</b><br>α₂ may move anywhere in [L, H]; α₁ follows from the line.`;
+    }
+    q6();
+  })();
+})();
+</script>

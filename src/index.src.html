@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Week 05 Interactive Labs</title>
+<meta name="description" content="Interactive labs for Machine Learning 2026, Week 05: kernel methods and support vector machines.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<!-- @inline lab.css -->
+<style>
+  .lab-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding-bottom: 80px; }
+  .lab-card { display: flex; flex-direction: column; gap: 12px; padding: 26px; border: 1px solid var(--panel-edge); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); color: inherit; text-decoration: none; transition: transform .15s ease, border-color .15s ease; }
+  .lab-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+  .lab-card h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(28px, 3vw, 40px); letter-spacing: -.02em; }
+  .lab-card p { margin: 0; color: var(--muted); }
+  .lab-card ul { margin: 0; padding-left: 18px; color: var(--fg); font-size: 14px; display: grid; gap: 4px; }
+  .lab-card .go { margin-top: auto; color: var(--primary); font-weight: 650; font-size: 14px; }
+  @media (max-width: 760px) { .lab-cards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="./">
+      <span class="crest" aria-hidden="true">UB</span>
+      <span class="brand-text"><strong>Machine Learning 2026 · Week 05</strong><span>University of Bern · Interactive lab</span></span>
+    </a>
+    <nav class="site-nav" aria-label="Labs">
+      <a href="kernels.html">Kernels</a>
+      <a href="svm.html">SVMs</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <section class="wrap hero" style="grid-template-columns: 1fr">
+    <div>
+      <p class="eyebrow">Week 05 · Supervised learning</p>
+      <h1>Kernels &amp; <em>SVMs</em></h1>
+      <p class="hero-copy">Two interactive labs that accompany the lecture notes. Start with kernel methods, then continue with support vector machines. Every experiment has presets, and each lab ends with worked discussion questions.</p>
+    </div>
+  </section>
+  <section class="wrap lab-cards">
+    <a class="lab-card" href="kernels.html">
+      <p class="kicker" style="margin:0">Chapter 5</p>
+      <h2>Kernel methods</h2>
+      <p>Feature maps, the kernel trick and what makes a function a valid kernel.</p>
+      <ul>
+        <li>Feature maps make curves linear</li>
+        <li>LMS with the kernel trick</li>
+        <li>Kernels as similarity</li>
+        <li>Valid (PSD) kernels</li>
+        <li>Computational cost</li>
+      </ul>
+      <span class="go">Open the kernels lab →</span>
+    </a>
+    <a class="lab-card" href="svm.html">
+      <p class="kicker" style="margin:0">Chapter 6</p>
+      <h2>Support vector machines</h2>
+      <p>From margins to the dual, soft margins, kernel SVMs and the SMO algorithm.</p>
+      <ul>
+        <li>Functional and geometric margins</li>
+        <li>The optimal margin classifier</li>
+        <li>Lagrange duality and KKT</li>
+        <li>Soft margin and C</li>
+        <li>Kernel SVMs and SMO</li>
+      </ul>
+      <span class="go">Open the SVM lab →</span>
+    </a>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="wrap"><span>Machine Learning 2026 · Week 05 · University of Bern</span></div>
+</footer>
+</body>
+</html>
