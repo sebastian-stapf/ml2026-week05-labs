@@ -33,12 +33,12 @@
   new MutationObserver(fireTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   if (document.fonts) { document.fonts.addEventListener('loadingdone', fireTheme); document.fonts.ready.then(fireTheme); }
 
-  /* ---------- theme picker (Auto / Light / Reading / Dark) ---------- */
+  /* ---------- theme picker (Auto / Light / Reading / Dark); Reading is the default ---------- */
   L.themePicker = () => {
     const sel = document.getElementById('theme-select');
     if (!sel) return;
-    let cur = 'auto';
-    try { cur = localStorage.getItem('w05-theme') || 'auto'; } catch (e) { /* storage unavailable */ }
+    let cur = 'reading';
+    try { cur = localStorage.getItem('w05-theme') || 'reading'; } catch (e) { /* storage unavailable */ }
     sel.value = cur;
     sel.addEventListener('change', () => {
       const v = sel.value;

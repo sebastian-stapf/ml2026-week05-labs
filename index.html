@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
-<script>try{var t=localStorage.getItem("w05-theme");if(t&&t!=="auto")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<script>var t="reading";try{t=localStorage.getItem("w05-theme")||t;}catch(e){}if(t!=="auto")document.documentElement.setAttribute("data-theme",t);</script>
 <style>
 /* Layout: sticky course header → hero with module sequence → tabbed lab modules (controls left, plots right) → worked questions.
    Visual system: calm paper background, solid white surfaces, high-contrast ink, one deep-teal accent, blue/orange classes. */
@@ -496,12 +496,12 @@ mjx-container[display="true"] { max-width: 100%; overflow-x: auto; overflow-y: h
   new MutationObserver(fireTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   if (document.fonts) { document.fonts.addEventListener('loadingdone', fireTheme); document.fonts.ready.then(fireTheme); }
 
-  /* ---------- theme picker (Auto / Light / Reading / Dark) ---------- */
+  /* ---------- theme picker (Auto / Light / Reading / Dark); Reading is the default ---------- */
   L.themePicker = () => {
     const sel = document.getElementById('theme-select');
     if (!sel) return;
-    let cur = 'auto';
-    try { cur = localStorage.getItem('w05-theme') || 'auto'; } catch (e) { /* storage unavailable */ }
+    let cur = 'reading';
+    try { cur = localStorage.getItem('w05-theme') || 'reading'; } catch (e) { /* storage unavailable */ }
     sel.value = cur;
     sel.addEventListener('change', () => {
       const v = sel.value;
