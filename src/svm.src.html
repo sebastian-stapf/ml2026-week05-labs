@@ -5,7 +5,8 @@
 <meta name="description" content="Interactive lab for Week 05: margins, the optimal margin classifier, Lagrange duality and KKT, soft margins, kernel SVMs and the SMO algorithm.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<script>try{var t=localStorage.getItem("w05-theme");if(t&&t!=="auto")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <!-- @inline lab.css -->
 <style>
   .plots.three { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); }
@@ -33,11 +34,21 @@
       <span class="crest" aria-hidden="true">UB</span>
       <span class="brand-text"><strong>Machine Learning 2026 · Week 05</strong><span>University of Bern · Interactive lab</span></span>
     </a>
-    <nav class="site-nav" aria-label="Labs">
+    <div class="header-right">
+      <nav class="site-nav" aria-label="Labs">
       <a href="{{KERNELS_URL}}">Kernels</a>
       <a href="{{SVM_URL}}" aria-current="page">SVMs</a>
       <a class="opt" href="#questions">Questions</a>
     </nav>
+      <label class="theme-pick"><span>Theme</span>
+        <select id="theme-select" aria-label="Colour theme">
+          <option value="auto">Auto</option>
+          <option value="light">Light</option>
+          <option value="reading">Reading</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
+    </div>
   </div>
 </header>
 

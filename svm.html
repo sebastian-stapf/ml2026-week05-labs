@@ -5,7 +5,8 @@
 <meta name="description" content="Interactive lab for Week 05: margins, the optimal margin classifier, Lagrange duality and KKT, soft margins, kernel SVMs and the SMO algorithm.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<script>try{var t=localStorage.getItem("w05-theme");if(t&&t!=="auto")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
 /* Layout: sticky course header → hero with module sequence → tabbed lab modules (controls left, plots right) → worked questions.
    Visual system: calm paper background, solid white surfaces, high-contrast ink, one deep-teal accent, blue/orange classes. */
@@ -41,7 +42,7 @@
   --radius: 14px;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme="light"]):not([data-theme="reading"]) {
     --bg: #111614;
     --surface: #181f1c;
     --surface-2: #1d2521;
@@ -98,6 +99,72 @@
   --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 24px rgba(0, 0, 0, .25);
   color-scheme: dark;
 }
+
+/* Reading theme: white page, near-black ink, flat surfaces and a typeface designed for legibility */
+:root[data-theme="reading"] {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f7f7f5;
+  --fg: #111111;
+  --muted: #2f3533;
+  --faint: #4d5552;
+  --line: #e2e2df;
+  --line-strong: #b9bdb9;
+  --header: rgba(255, 255, 255, .97);
+  --primary: #0a5a4b;
+  --primary-hover: #074538;
+  --primary-soft: #edf5f2;
+  --primary-ink: #ffffff;
+  --pos: #1a56b8;
+  --neg: #c25a00;
+  --pos-soft: #eef3fb;
+  --neg-soft: #fdf3ea;
+  --bad: #a8261e;
+  --good: #136b44;
+  --plot-bg: #ffffff;
+  --plot-grid: rgba(0, 0, 0, .08);
+  --plot-axis: rgba(0, 0, 0, .5);
+  --plot-ink: #1f2422;
+  --shadow: none;
+  --font-body: 'Atkinson Hyperlegible', 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Atkinson Hyperlegible', 'Helvetica Neue', Arial, sans-serif;
+  color-scheme: light;
+}
+:root[data-theme="reading"] body { font-size: 17px; line-height: 1.7; letter-spacing: .005em; }
+:root[data-theme="reading"] .hero h1,
+:root[data-theme="reading"] .module-heading h2,
+:root[data-theme="reading"] .questions h2,
+:root[data-theme="reading"] .lab-card h2 { font-weight: 700; letter-spacing: -.015em; }
+:root[data-theme="reading"] .hero h1 em { font-style: normal; }
+:root[data-theme="reading"] .module-heading p.lead,
+:root[data-theme="reading"] .hero-copy { font-size: 18px; color: var(--fg); }
+:root[data-theme="reading"] .explainer p,
+:root[data-theme="reading"] .status,
+:root[data-theme="reading"] .steps li,
+:root[data-theme="reading"] .takeaway { font-size: 17px; }
+:root[data-theme="reading"] .hint,
+:root[data-theme="reading"] .ctl-label,
+:root[data-theme="reading"] .check,
+:root[data-theme="reading"] .legend { font-size: 15.5px; }
+:root[data-theme="reading"] .eyebrow,
+:root[data-theme="reading"] .kicker,
+:root[data-theme="reading"] .toolbar,
+:root[data-theme="reading"] .controls h3,
+:root[data-theme="reading"] .readout dt,
+:root[data-theme="reading"] .plot-cell .cap,
+:root[data-theme="reading"] .result > span,
+:root[data-theme="reading"] .takeaway > span,
+:root[data-theme="reading"] .explainer > span { font-size: 13px; }
+:root[data-theme="reading"] .lab-module,
+:root[data-theme="reading"] .q,
+:root[data-theme="reading"] .hero-card,
+:root[data-theme="reading"] .module-nav { border-color: var(--line-strong); }
+
+/* Theme picker */
+.theme-pick { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.theme-pick select { width: auto; padding: 6px 30px 6px 10px; font-size: 14px; border-radius: 999px; background-color: var(--surface); }
+.header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 640px) { .theme-pick > span { display: none; } .theme-pick select { padding: 5px 8px; font-size: 13px; } }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -343,11 +410,21 @@ mjx-container[display="true"] { max-width: 100%; overflow-x: auto; overflow-y: h
       <span class="crest" aria-hidden="true">UB</span>
       <span class="brand-text"><strong>Machine Learning 2026 · Week 05</strong><span>University of Bern · Interactive lab</span></span>
     </a>
-    <nav class="site-nav" aria-label="Labs">
+    <div class="header-right">
+      <nav class="site-nav" aria-label="Labs">
       <a href="kernels.html">Kernels</a>
       <a href="svm.html" aria-current="page">SVMs</a>
       <a class="opt" href="#questions">Questions</a>
     </nav>
+      <label class="theme-pick"><span>Theme</span>
+        <select id="theme-select" aria-label="Colour theme">
+          <option value="auto">Auto</option>
+          <option value="light">Light</option>
+          <option value="reading">Reading</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
+    </div>
   </div>
 </header>
 
@@ -853,6 +930,23 @@ mjx-container[display="true"] { max-width: 100%; overflow-x: auto; overflow-y: h
   const fireTheme = () => themeListeners.forEach(f => f());
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fireTheme);
   new MutationObserver(fireTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (document.fonts) { document.fonts.addEventListener('loadingdone', fireTheme); document.fonts.ready.then(fireTheme); }
+
+  /* ---------- theme picker (Auto / Light / Reading / Dark) ---------- */
+  L.themePicker = () => {
+    const sel = document.getElementById('theme-select');
+    if (!sel) return;
+    let cur = 'auto';
+    try { cur = localStorage.getItem('w05-theme') || 'auto'; } catch (e) { /* storage unavailable */ }
+    sel.value = cur;
+    sel.addEventListener('change', () => {
+      const v = sel.value;
+      if (v === 'auto') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', v);
+      try { localStorage.setItem('w05-theme', v); } catch (e) { /* storage unavailable */ }
+    });
+  };
+  L.themePicker();
 
   /* ---------- MathJax re-typeset for dynamic content ---------- */
   L.typeset = els => {

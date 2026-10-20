@@ -31,6 +31,23 @@
   const fireTheme = () => themeListeners.forEach(f => f());
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fireTheme);
   new MutationObserver(fireTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (document.fonts) { document.fonts.addEventListener('loadingdone', fireTheme); document.fonts.ready.then(fireTheme); }
+
+  /* ---------- theme picker (Auto / Light / Reading / Dark) ---------- */
+  L.themePicker = () => {
+    const sel = document.getElementById('theme-select');
+    if (!sel) return;
+    let cur = 'auto';
+    try { cur = localStorage.getItem('w05-theme') || 'auto'; } catch (e) { /* storage unavailable */ }
+    sel.value = cur;
+    sel.addEventListener('change', () => {
+      const v = sel.value;
+      if (v === 'auto') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', v);
+      try { localStorage.setItem('w05-theme', v); } catch (e) { /* storage unavailable */ }
+    });
+  };
+  L.themePicker();
 
   /* ---------- MathJax re-typeset for dynamic content ---------- */
   L.typeset = els => {
