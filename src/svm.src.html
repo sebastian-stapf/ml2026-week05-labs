@@ -16,7 +16,7 @@
   .sub-lab h3.title { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 22px; letter-spacing: -.01em; color: var(--fg); text-transform: none; }
   .margin-table td.bad { color: var(--bad); }
   .margin-table tr.min td { font-weight: 700; }
-  .smo-log { padding: 10px 16px; border-top: 1px solid var(--line); font: 12.5px/1.6 var(--font-mono); color: var(--muted); background: var(--panel-2); overflow-x: auto; }
+  .smo-log { padding: 10px 16px; border-top: 1px solid var(--line); font: 12.5px/1.6 var(--font-mono); color: var(--muted); background: var(--surface-2); overflow-x: auto; }
 </style>
 <script>
   window.MathJax = {
@@ -542,8 +542,8 @@
     ctx.beginPath(); ctx.moveTo(p.X(1), p.Y(0)); ctx.lineTo(p.X(1), p.Y(cTop)); ctx.stroke();
     if (isFinite(C)) { ctx.beginPath(); ctx.moveTo(p.X(p.v.xmin), p.Y(C)); ctx.lineTo(p.X(1), p.Y(C)); ctx.stroke(); }
     ctx.restore();
-    if (isFinite(C)) p.label('α = C', p.v.xmax, C, { align: 'right', base: 'bottom', dx: -4, dy: -3, font: `11px ${css('--font-mono')}`, color: css('--muted') });
-    p.label('allowed by (6.16)–(6.18)', p.v.xmax, 0, { align: 'right', base: 'bottom', dx: -4, dy: -4, font: `11px ${css('--font-body')}`, color: css('--good') });
+    if (isFinite(C)) p.label('α = C', p.v.xmax, C, { align: 'right', base: 'bottom', dx: -4, dy: -3, font: `12.5px ${css('--font-mono')}`, color: css('--muted') });
+    p.label('allowed by (6.16)–(6.18)', p.v.xmax, 0, { align: 'right', base: 'bottom', dx: -4, dy: -4, font: `12.5px ${css('--font-body')}`, color: css('--good') });
     let clipped = 0, viol = 0;
     for (let t = 0; t < n; t++) {
       let x = yf[t];
@@ -596,10 +596,10 @@
       // w arrow from the point on the line closest to the origin
       const s0 = -b / (nw * nw), ox = s0 * w[0], oy = s0 * w[1];
       p.arrow(ox, oy, ox + w[0] * 0.8, oy + w[1] * 0.8, { color: css('--primary'), width: 2.2 });
-      p.label('w', ox + w[0] * 0.8, oy + w[1] * 0.8, { dx: 8, dy: -6, font: `italic 600 15px ${css('--font-display')}`, color: css('--primary') });
+      p.label('w', ox + w[0] * 0.8, oy + w[1] * 0.8, { dx: 8, dy: -6, font: `italic 600 16px ${css('--font-display')}`, color: css('--primary') });
       pts.forEach((q, i) => {
         p.marker(q.x, q.y, q.l, { r: 6 });
-        if (q.l > 0 && i < 3) p.label(names[i], q.x, q.y, { dx: 9, dy: -10, font: `600 13px ${css('--font-body')}`, color: css('--fg') });
+        if (q.l > 0 && i < 3) p.label(names[i], q.x, q.y, { dx: 9, dy: -10, font: `600 14.5px ${css('--font-body')}`, color: css('--fg') });
       });
     };
     Lab.drag(plot, { pts: () => pts, onMove: (i, x, y) => { pts[i].x = x; pts[i].y = y; draw(); } });
@@ -673,14 +673,14 @@
           ctx.save(); ctx.strokeStyle = css('--primary'); ctx.lineWidth = 1.6;
           ctx.beginPath(); ctx.moveTo(p.X(ox - u[0] * half), p.Y(oy - u[1] * half)); ctx.lineTo(p.X(ox + u[0] * half), p.Y(oy + u[1] * half)); ctx.stroke(); ctx.restore();
           p.arrow(ox, oy, ox + u[0] * 0.9, oy + u[1] * 0.9, { color: css('--primary'), width: 2.2 });
-          p.label('w', ox + u[0] * 0.9, oy + u[1] * 0.9, { dx: 6, dy: -8, font: `italic 600 15px ${css('--font-display')}`, color: css('--primary') });
-          p.label(`2/‖w‖ = ${fmt(2 / nw, 2)}`, ox - u[0] * half, oy - u[1] * half, { dx: 8, dy: 10, font: `11px ${css('--font-mono')}`, color: css('--primary') });
+          p.label('w', ox + u[0] * 0.9, oy + u[1] * 0.9, { dx: 6, dy: -8, font: `italic 600 16px ${css('--font-display')}`, color: css('--primary') });
+          p.label(`2/‖w‖ = ${fmt(2 / nw, 2)}`, ox - u[0] * half, oy - u[1] * half, { dx: 8, dy: 10, font: `12.5px ${css('--font-mono')}`, color: css('--primary') });
         }
       }
       pts.forEach((q, i) => {
         const sv = feasible && s.alpha[i] > 1e-6;
         p.marker(q.x, q.y, q.l, { r: 6, ring: sv });
-        if (sv && showA.checked) p.label(`α=${fmt(s.alpha[i], 2)}`, q.x, q.y, { dx: 12, dy: 12, font: `11px ${css('--font-mono')}`, color: css('--fg') });
+        if (sv && showA.checked) p.label(`α=${fmt(s.alpha[i], 2)}`, q.x, q.y, { dx: 12, dy: 12, font: `12.5px ${css('--font-mono')}`, color: css('--fg') });
       });
     };
     Lab.drag(plot, { pts: () => pts, onMove: (i, x, y) => { pts[i].x = x; pts[i].y = y; pre.clear(); update(); } });
@@ -690,13 +690,13 @@
       const m = feasible ? Math.max(...s.alpha, 0.05) * 1.18 : 1;
       p.o.xmax = n; p.o.ymax = m; p.layout();
       p.axes({ xfmt: () => '', ylabel: 'αᵢ' });
-      if (!feasible) { p.label('no solution: data not separable', n / 2, m / 2, { align: 'center', color: css('--bad'), font: `600 13px ${css('--font-body')}` }); return; }
+      if (!feasible) { p.label('no solution: data not separable', n / 2, m / 2, { align: 'center', color: css('--bad'), font: `600 14.5px ${css('--font-body')}` }); return; }
       pts.forEach((q, i) => {
         const a = s.alpha[i];
         ctx.fillStyle = q.l > 0 ? css('--pos') : css('--neg');
         const x0 = p.X(i + .18), x1 = p.X(i + .82);
         ctx.fillRect(x0, p.Y(a), x1 - x0, p.Y(0) - p.Y(a) + .5);
-        p.label(String(i + 1), i + .5, 0, { align: 'center', base: 'top', dy: 4, font: `10px ${css('--font-mono')}` });
+        p.label(String(i + 1), i + .5, 0, { align: 'center', base: 'top', dy: 4, font: `11.5px ${css('--font-mono')}` });
       });
     };
     function update() {
@@ -746,27 +746,27 @@
       ctx.fillStyle = css('--plot-grid'); ctx.globalAlpha = 1;
       ctx.fillRect(p.o.pad.l, p.o.pad.t, Math.max(0, p.X(tt) - p.o.pad.l), p.ph);
       p.axes({ xlabel: 'w', ylabel: 'value' });
-      p.label('infeasible: θ_P(w) = ∞', Math.max(p.v.xmin, tt) - 0.05, p.v.ymax, { align: 'right', base: 'top', dy: 6, font: `11px ${css('--font-body')}`, color: css('--muted') });
+      p.label('infeasible: θ_P(w) = ∞', Math.max(p.v.xmin, tt) - 0.05, p.v.ymax, { align: 'right', base: 'top', dy: 6, font: `12.5px ${css('--font-body')}`, color: css('--muted') });
       ctx.strokeStyle = css('--plot-axis'); ctx.setLineDash([2, 3]);
       ctx.beginPath(); ctx.moveTo(p.X(tt), p.o.pad.t); ctx.lineTo(p.X(tt), p.o.pad.t + p.ph); ctx.stroke(); ctx.setLineDash([]);
       p.curve(w => 0.5 * w * w, { color: css('--fg'), width: 2.4 });
       p.curve(w => 0.5 * w * w + al * (tt - w), { color: css('--primary'), width: 2, dash: [6, 4] });
       // minimiser of L at w = α
       p.dot(al, thetaD(al), { r: 5, color: css('--primary') });
-      p.label(`min 𝓛 = θ_D(α) = ${fmt(thetaD(al), 2)}`, al, thetaD(al), { dx: 8, dy: 12, font: `11px ${css('--font-mono')}`, color: css('--primary') });
+      p.label(`min 𝓛 = θ_D(α) = ${fmt(thetaD(al), 2)}`, al, thetaD(al), { dx: 8, dy: 12, font: `12.5px ${css('--font-mono')}`, color: css('--primary') });
       const ws = Math.max(tt, 0);
       p.dot(ws, pstar(), { r: 5.5, color: css('--neg') });
-      p.label(`w* = ${fmt(ws, 2)}, p* = ${fmt(pstar(), 2)}`, ws, pstar(), { dx: 8, dy: -12, font: `11px ${css('--font-mono')}`, color: css('--neg') });
+      p.label(`w* = ${fmt(ws, 2)}, p* = ${fmt(pstar(), 2)}`, ws, pstar(), { dx: 8, dy: -12, font: `12.5px ${css('--font-mono')}`, color: css('--neg') });
     };
     const dual = new Plot('d-dual', { xmin: 0, xmax: 3.5, ymin: -2.5, ymax: 2.5, pad: { l: 40, b: 30, t: 14, r: 12 } });
     dual.draw = (p, ctx) => {
       const tt = t(), al = a(), as = Math.max(tt, 0);
       p.axes({ xlabel: 'α ≥ 0', ylabel: 'θ_D(α)' });
       p.line(0, 1, -pstar(), { color: css('--neg'), width: 1.4, dash: [5, 4] });
-      p.label('p*', p.v.xmax, pstar(), { align: 'right', base: 'bottom', dx: -4, dy: -3, font: `italic 13px ${css('--font-display')}`, color: css('--neg') });
+      p.label('p*', p.v.xmax, pstar(), { align: 'right', base: 'bottom', dx: -4, dy: -3, font: `italic 14.5px ${css('--font-display')}`, color: css('--neg') });
       p.curve(thetaD, { color: css('--fg'), width: 2.4, x0: 0 });
       p.dot(as, thetaD(as), { r: 5.5, color: css('--neg') });
-      p.label(`α* = ${fmt(as, 2)}, d* = ${fmt(thetaD(as), 2)}`, as, thetaD(as), { dx: 8, dy: 14, font: `11px ${css('--font-mono')}`, color: css('--neg') });
+      p.label(`α* = ${fmt(as, 2)}, d* = ${fmt(thetaD(as), 2)}`, as, thetaD(as), { dx: 8, dy: 14, font: `12.5px ${css('--font-mono')}`, color: css('--neg') });
       p.dot(al, thetaD(al), { r: 5, color: css('--primary') });
       ctx.strokeStyle = css('--primary'); ctx.setLineDash([2, 3]);
       ctx.beginPath(); ctx.moveTo(p.X(al), p.Y(thetaD(al))); ctx.lineTo(p.X(al), p.Y(pstar())); ctx.stroke(); ctx.setLineDash([]);
@@ -835,11 +835,11 @@
       const P_ = pts();
       P_.forEach((q, i) => {
         const xi = Math.max(0, 1 - q.l * (w[0] * q.x + w[1] * q.y + b));
-        if (xi > 1e-6) {
+        if (xi > 1e-3) {
           const tx = q.x + q.l * xi * w[0] / nw2, ty = q.y + q.l * xi * w[1] / nw2;
           ctx.strokeStyle = css('--bad'); ctx.lineWidth = 2.2;
           ctx.beginPath(); ctx.moveTo(p.X(q.x), p.Y(q.y)); ctx.lineTo(p.X(tx), p.Y(ty)); ctx.stroke();
-          p.label(`ξ=${fmt(xi, 2)}`, q.x, q.y, { dx: -10, dy: 14, align: 'right', font: `11px ${css('--font-mono')}`, color: css('--bad') });
+          p.label(`ξ=${fmt(xi, 2)}`, q.x, q.y, { dx: -10, dy: 14, align: 'right', font: `12.5px ${css('--font-mono')}`, color: css('--bad') });
         }
       });
       P_.forEach((q, i) => p.marker(q.x, q.y, q.l, { r: 6, ring: s.alpha[i] > 1e-6, ringColor: s.alpha[i] >= s.C - 1e-6 ? css('--bad') : css('--fg') }));
@@ -1023,12 +1023,12 @@
       }
       pts.forEach((q, t) => {
         p.marker(q.x, q.y, q.l, { r: 6, ring: s.alpha[t] > 1e-6 });
-        p.label(String(t + 1), q.x, q.y, { dx: -12, dy: -10, align: 'right', font: `10px ${css('--font-mono')}`, color: css('--muted') });
+        p.label(String(t + 1), q.x, q.y, { dx: -12, dy: -10, align: 'right', font: `11.5px ${css('--font-mono')}`, color: css('--muted') });
       });
       if (last) [last.i, last.j].forEach((t, k) => {
         ctx.strokeStyle = css('--bad'); ctx.lineWidth = 2.5;
         ctx.beginPath(); ctx.arc(p.X(pts[t].x), p.Y(pts[t].y), 13, 0, 2 * Math.PI); ctx.stroke();
-        p.label(k ? 'j' : 'i', pts[t].x, pts[t].y, { dx: 15, dy: -12, font: `italic 600 15px ${css('--font-display')}`, color: css('--bad') });
+        p.label(k ? 'j' : 'i', pts[t].x, pts[t].y, { dx: 15, dy: -12, font: `italic 600 16px ${css('--font-display')}`, color: css('--bad') });
       });
     };
     const box = new Plot('m-box', { xmin: 0, xmax: 1, ymin: 0, ymax: 1, equal: true, pad: { l: 44, b: 36, t: 30, r: 16 } });
@@ -1038,7 +1038,7 @@
       p.axes({ xlabel: 'αᵢ', ylabel: 'αⱼ', zero: false });
       ctx.fillStyle = css('--primary-soft'); ctx.strokeStyle = css('--primary'); ctx.lineWidth = 1.5;
       ctx.fillRect(p.X(0), p.Y(C), C * p.sx, C * p.sy); ctx.strokeRect(p.X(0), p.Y(C), C * p.sx, C * p.sy);
-      p.label('C', 0, C, { dx: -6, align: 'right', font: `11px ${css('--font-mono')}`, color: css('--primary') });
+      p.label('C', 0, C, { dx: -6, align: 'right', font: `12.5px ${css('--font-mono')}`, color: css('--primary') });
       if (!last) { p.label('press Next pair', C / 2, C / 2, { align: 'center', color: css('--muted') }); return; }
       const g = last;
       // α_i as a function of α_j: α_i = y_i ζ − sgn α_j
@@ -1049,8 +1049,8 @@
       ctx.beginPath(); ctx.moveTo(p.X(ai(ext[0])), p.Y(ext[0])); ctx.lineTo(p.X(ai(ext[1])), p.Y(ext[1])); ctx.stroke(); ctx.setLineDash([]);
       ctx.strokeStyle = css('--fg'); ctx.lineWidth = 3.2;
       ctx.beginPath(); ctx.moveTo(p.X(ai(g.L)), p.Y(g.L)); ctx.lineTo(p.X(ai(g.H)), p.Y(g.H)); ctx.stroke();
-      p.label('L', ai(g.L), g.L, { dx: 8, dy: 6, font: `600 12px ${css('--font-mono')}` });
-      p.label('H', ai(g.H), g.H, { dx: 8, dy: -6, font: `600 12px ${css('--font-mono')}` });
+      p.label('L', ai(g.L), g.L, { dx: 8, dy: 6, font: `600 13.5px ${css('--font-mono')}` });
+      p.label('H', ai(g.H), g.H, { dx: 8, dy: -6, font: `600 13.5px ${css('--font-mono')}` });
       p.dot(g.ai, g.aj, { r: 5, color: css('--muted') });
       if (isFinite(g.unclipped) && Math.abs(g.unclipped - g.clipped) > 1e-9) {
         ctx.save(); ctx.strokeStyle = css('--bad'); ctx.lineWidth = 1.6;
@@ -1059,7 +1059,7 @@
       }
       p.arrow(g.ai, g.aj, g.newAi, g.newAj, { color: css('--bad'), width: 2 });
       p.dot(g.newAi, g.newAj, { r: 5.5, color: css('--bad') });
-      p.label(`αᵢyᵢ + αⱼyⱼ = ζ = ${fmt(g.zeta, 2)}`, p.v.xmin, p.v.ymax, { dx: 6, dy: 10, font: `11px ${css('--font-mono')}`, color: css('--muted') });
+      p.label(`αᵢyᵢ + αⱼyⱼ = ζ = ${fmt(g.zeta, 2)}`, p.v.xmin, p.v.ymax, { dx: 6, dy: 10, font: `12.5px ${css('--font-mono')}`, color: css('--muted') });
     };
     const par = new Plot('m-par', { xmin: 0, xmax: 1, ymin: 0, ymax: 1, pad: { l: 50, b: 36, t: 30, r: 16 } });
     par.draw = (p, ctx) => {
@@ -1079,12 +1079,12 @@
       if (isFinite(g.unclipped) && g.unclipped > p.v.xmin && g.unclipped < p.v.xmax) {
         ctx.strokeStyle = css('--bad'); ctx.setLineDash([3, 3]); ctx.lineWidth = 1.3;
         ctx.beginPath(); ctx.moveTo(p.X(g.unclipped), p.o.pad.t); ctx.lineTo(p.X(g.unclipped), p.o.pad.t + p.ph); ctx.stroke(); ctx.setLineDash([]);
-        p.label('unclipped', g.unclipped, p.v.ymax, { dx: 4, dy: 8, font: `10.5px ${css('--font-body')}`, color: css('--bad') });
+        p.label('unclipped', g.unclipped, p.v.ymax, { dx: 4, dy: 8, font: `12px ${css('--font-body')}`, color: css('--bad') });
       }
       p.dot(g.aj, g.Wline(g.aj), { r: 4.5, color: css('--muted') });
       p.dot(g.newAj, g.Wline(g.newAj), { r: 5.5, color: css('--bad') });
-      p.label('L', g.L, p.v.ymin, { align: 'center', base: 'bottom', dy: -3, font: `600 11px ${css('--font-mono')}` });
-      p.label('H', g.H, p.v.ymin, { align: 'center', base: 'bottom', dy: -3, font: `600 11px ${css('--font-mono')}` });
+      p.label('L', g.L, p.v.ymin, { align: 'center', base: 'bottom', dy: -3, font: `600 12.5px ${css('--font-mono')}` });
+      p.label('H', g.H, p.v.ymin, { align: 'center', base: 'bottom', dy: -3, font: `600 12.5px ${css('--font-mono')}` });
     };
     function render() {
       plot.render(); box.render(); par.render();
@@ -1141,7 +1141,7 @@
       }
       ctx.stroke();
       p.dot(2, -2, { r: 5, color: css('--fg') });
-      p.label('start (2, −2)', 2, -2, { dx: 8, dy: 10, font: `11px ${css('--font-mono')}` });
+      p.label('start (2, −2)', 2, -2, { dx: 8, dy: 10, font: `12.5px ${css('--font-mono')}` });
       p.dot(0, 0, { r: 4, color: css('--neg') });
       $('#ca-out').innerHTML = `<span>Current result</span>${steps} coordinate updates to get within 10⁻³ of the maximum. Each pair of updates shrinks the distance by a factor ρ² = ${(r * r).toFixed(2)}. Strongly coupled variables (ρ near 1) make single-coordinate steps slow.`;
     };
@@ -1170,8 +1170,8 @@
       ctx.beginPath(); ctx.moveTo(p.X(A[0]), p.Y(A[1])); ctx.lineTo(p.X(B[0]), p.Y(B[1])); ctx.stroke();
       p.marker(A[0], A[1], 1, { r: 5 });
       p.dot(B[0], B[1], { r: 4, color: css('--fg') });
-      p.label('A', A[0], A[1], { dx: 8, dy: -8, font: `600 12px ${css('--font-body')}` });
-      p.label('B', B[0], B[1], { dx: 8, dy: 8, font: `600 12px ${css('--font-body')}` });
+      p.label('A', A[0], A[1], { dx: 8, dy: -8, font: `600 13.5px ${css('--font-body')}` });
+      p.label('B', B[0], B[1], { dx: 8, dy: 8, font: `600 13.5px ${css('--font-body')}` });
       $('#q2-out').innerHTML = `wᵀA + b = ${fmt(Lab.dot(W2, A) + B2, 3)}, ‖w‖ = √5 = ${fmt(N2, 3)}<br>γ = <b>${fmt(g, 3)}</b>${g < 0 ? ' (negative: A is on the wrong side)' : ''}<br>B = A − γ w/‖w‖ = (${fmt(B[0], 3)}, ${fmt(B[1], 3)}), wᵀB + b = ${fmt(Lab.dot(W2, B) + B2, 6)}`;
     };
     // S3, S4 from Experiment 2

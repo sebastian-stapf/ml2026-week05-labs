@@ -200,7 +200,7 @@
       xfmt = xfmt || (t => t.toFixed(dec(sx)).replace('-', '−'));
       yfmt = yfmt || (t => t.toFixed(dec(sy)).replace('-', '−'));
       ctx.lineWidth = 1;
-      ctx.font = `11px ${L.css('--font-mono')}`;
+      ctx.font = `12.5px ${L.css('--font-mono')}`;
       ctx.fillStyle = ink;
       ctx.strokeStyle = grid;
       ctx.textAlign = 'center'; ctx.textBaseline = 'top';
@@ -221,7 +221,7 @@
         if (v.xmin < 0 && v.xmax > 0) { const x = Math.round(this.X(0)) + .5; ctx.beginPath(); ctx.moveTo(x, p.t); ctx.lineTo(x, p.t + this.ph); ctx.stroke(); }
       }
       ctx.strokeRect(p.l + .5, p.t + .5, this.pw - 1, this.ph - 1);
-      ctx.font = `italic 13px ${L.css('--font-display')}`;
+      ctx.font = `italic 14.5px ${L.css('--font-display')}`;
       ctx.fillStyle = ink;
       if (xlabel) { ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText(xlabel, p.l + this.pw - 6, p.t + this.ph - 4); }
       if (ylabel) { ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(ylabel, p.l + 6, p.t + 5); }
@@ -332,7 +332,7 @@
     label(text, x, y, { color, align = 'left', base = 'middle', font, dx = 0, dy = 0 } = {}) {
       const ctx = this.ctx;
       ctx.save(); ctx.fillStyle = color || L.css('--plot-ink');
-      ctx.font = font || `12px ${L.css('--font-body')}`;
+      ctx.font = font || `13.5px ${L.css('--font-body')}`;
       ctx.textAlign = align; ctx.textBaseline = base;
       ctx.fillText(text, this.X(x) + dx, this.Y(y) + dy); ctx.restore();
     }
