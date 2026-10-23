@@ -21,7 +21,7 @@ args = ap.parse_args()
 css = (SRC / "lab.css").read_text()
 js = (SRC / "lab.js").read_text()
 
-pages = ("index", "kernels", "svm") if args.out == "." else ("kernels", "svm")
+pages = ("index",)  # the labs moved to ml2026-week05-kernels and ml2026-week05-svm
 for name in pages:
     page = (SRC / f"{name}.src.html").read_text()
     page = page.replace("<!-- @inline lab.css -->", f"<style>\n{css}\n</style>")

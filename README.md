@@ -1,15 +1,8 @@
-# Machine Learning 2026 · Week 05 interactive labs
+# Machine Learning 2026 · Week 05 interactive labs (moved)
 
-Interactive companions to the Week 05 lecture notes (Chapter 5 Kernel Methods, Chapter 6 Support Vector Machines).
+The Week 05 labs now live in their own repositories and sites:
 
-- `index.html`: landing page
-- `kernels.html`: feature maps, the kernel trick, kernels as similarity, valid kernels, cost
-- `svm.html`: margins, optimal margin classifier, duality and KKT, soft margin, kernel SVMs, SMO
+- Kernel methods: https://sebastian-stapf.github.io/ml2026-week05-kernels/ (repo: https://github.com/sebastian-stapf/ml2026-week05-kernels)
+- Support vector machines: https://sebastian-stapf.github.io/ml2026-week05-svm/ (repo: https://github.com/sebastian-stapf/ml2026-week05-svm)
 
-The published pages are built from `src/`. Edit the sources, then rebuild:
-
-```sh
-python3 build.py
-```
-
-`build.py` inlines `src/lab.css` and `src/lab.js` so every page is a single self-contained HTML file. GitHub Pages serves the repository root.
+This repository is archived. Its site keeps a landing page that links to both labs, and the old `kernels.html` and `svm.html` addresses redirect to the new sites.
